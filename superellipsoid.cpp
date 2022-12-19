@@ -1,3 +1,4 @@
+#include <bits/types/wint_t.h>
 #include <boost/math/quaternion.hpp>
 #include <cmath>
 #include <eigen3/Eigen/Dense>
@@ -6,6 +7,11 @@
 #include <stdexcept>
 #include <string>
 #include "superellipsoid.h"
+
+// Sign function. Returns the sign of input and 0 if input is 0.
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 Superellipsoid::Superellipsoid(int cls, float scale_params[3], float shape_params[2]) {
 	float n1 = shape_params[0];
@@ -55,9 +61,13 @@ float Superellipsoid::get_shape(std::string param_name) {
 void Superellipsoid::set_center(Eigen::Vector3d c) { this->c = c; }
 void Superellipsoid::set_orientation(Eigen::Quaternion<double> q) { this->q = q; }
 
-float Superellipsoid::implicit_surface(Eigen::Vector3d x) {
+Eigen::Vector3d Superellipsoid::to_local_coords(Eigen::Vector3d x) {
 	Eigen::Matrix3d R = this->get_orientation().toRotationMatrix();
-	Eigen::Vector3d x_local =  R * ( x - this->get_center() );
+	return  R * ( x - this->get_center() );
+}
+
+float Superellipsoid::implicit_surface(Eigen::Vector3d x) {
+	Eigen::Vector3d x_local = this->to_local_coords(x);
 	float xl = x_local[0];
 	float yl = x_local[1];
 	float zl = x_local[2];
@@ -77,5 +87,25 @@ float Superellipsoid::inside_outside(Eigen::Vector3d x) {
 	return this->implicit_surface(x) - 1;
 }
 
+Eigen::Vector3d Superellipsoid::inside_outside_grad(Eigen::Vector3d x) {
+	Eigen::Vector3d x_local = this->to_local_coords(x);
+	float xl = x_local[0];
+	float yl = x_local[1];
+	float zl = x_local[2];
+
+	float a 	= this->get_scale("a"); 
+	float b 	= this->get_scale("b"); 
+	float c 	= this->get_scale("c");
+	float n1 	= this->get_shape("n1");
+	float n2 	= this->get_shape("n2");
+
+	float v = std::pow(std::abs(xl/a), n2) + std::pow(std::abs(yl/b), n2);
+	float dx = (n1/a) * std::pow(std::abs(xl/a), n2 - 1) * std::pow(v, n1/n2 - 1) * sgn(xl);
+	float dy = (n1/b) * std::pow(std::abs(yl/b), n2 - 1) * std::pow(v, n1/n2 - 1) * sgn(yl);
+	float dz = (n1/c) * std::pow(std::abs(zl/c), n1 - 1) * sgn(zl);
+
+	Eigen::Vector3d grad(dx, dy, dz);
+	return grad;
+}
 
 

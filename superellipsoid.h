@@ -12,6 +12,7 @@ class Superellipsoid {
 		float 						shape[2];
 		Eigen::Quaternion<double> 	q;
 
+		Eigen::Vector3d to_local_coords(Eigen::Vector3d x);
 
 	public:
 		Superellipsoid(int cls, float scale_params[3], float shape_params[2]);
@@ -36,6 +37,7 @@ class Superellipsoid {
 		float enclosing_sphere_radius();
 		void draw(int resolution);
 		static float distance(Superellipsoid p1, Superellipsoid p2);
+
 };
 
 #endif

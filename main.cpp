@@ -16,7 +16,7 @@ int main() {
 
 
 	Eigen::Vector3d x(10,10,10);
-	std::cout<<"INSIDE-OUTSIDE: "<<p.inside_outside(x)<<std::endl;
+	std::cout<<"INSIDE-OUTSIDE: "<<p.inside_outside_grad(x)<<std::endl;
 
 	return 0;
 }
