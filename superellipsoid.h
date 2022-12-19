@@ -85,7 +85,6 @@ class Superellipsoid {
 		
 		// Returns minimum distance between `p1` and `p2`.
 		static double distance(Superellipsoid p1, Superellipsoid p2);
-
 };
 
 #endif

@@ -43,11 +43,38 @@ class CoordinateIndexer {
 		 * are present in either of the input arguments, unexpected behaviour
 		 * may occur.
 		 *
-		 * @param 	`a1`, `a2` are arrays of integers.
+		 * @param `a1`, `a2` are arrays of integers.
 		 */
 		static void intersect(int* a1, int* a2);
 
 	public:
+		// Constructor for when neither number of particles or particles are known.
+		CoordinateIndexer();
+		
+		// Constructor for when particles are known.
+		CoordinateIndexer(Superellipsoid* particles);
+		
+		// Constructor for when number of particles are known.
+		CoordinateIndexer(int n_particles);
+
+		// Inserts `p` into CoordinateIndexer and indexes its coordinates.
+		void insert(Superellipsoid p);
+
+		// Returns array of all particles.
+		Superellipsoid* get_particles();
+	
+		// Returns number of particles in CoordinateIndexer.
+		int n_particles();
+
+		/**
+		 * Returns array of particles whose center lie in the domain define by `x_range`x`y_range`x`z_range`.
+		 *
+		 * @param `x_range`: array of 2 doubles defining x-axis range. Smallest value is at index 0 and larges is at index 1.
+		 * @param `y_range`: array of 2 doubles defining y-axis range. Smallest value is at index 0 and larges is at index 1.
+		 * @param `z_range`: array of 2 doubles defining z-axis range. Smallest value is at index 0 and larges is at index 1.
+		 * @return array of superellipsoids all of which lie in the domain defined by `x_range`x`y_range`x`z_range`.
+		 */
+		Superellipsoid* particles_in_domain(double x_range[2], double y_range[2], double z_range[2]);
 };
 
 #endif
