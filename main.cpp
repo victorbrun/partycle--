@@ -6,7 +6,7 @@
 
 int main() {
 	double scale_params[3] = {1,1,1};
-	double shape_params[2] = {2,2};
+	double shape_params[2] = {10,20};
 	Superellipsoid p = Superellipsoid(0, scale_params, shape_params);
 	Eigen::Vector3d center(0,0,0);
 	Eigen::Quaternion<double> rot(1,1,1,1);
