@@ -71,9 +71,19 @@ class Superellipsoid {
 		// Hessian matrix of inside_outside function evalueate at `x = (x, y, z)^T`.
 		Eigen::Matrix3d inside_outside_hess(Eigen::Vector3d x);
 
+		/*
+		 * Computes the parametric radius vector of the Superellipsoid as ´eta´, ´omega´.
+		 *
+		 * @param `eta`: space angle, defined on [-pi/2, pi/2].
+		 * @param `omega`: xy-place angle, defined on [-pi, pi).
+		 * @return radius vector evaluated at `eta`, `omega`.
+		 */
 		double parametric_surface(double eta, double omega);
+		
+		// Returns radius of smallest sphere enclosing whole Superellipsoid.
 		double enclosing_sphere_radius();
-		void draw(int resolution);
+		
+		// Returns minimum distance between `p1` and `p2`.
 		static double distance(Superellipsoid p1, Superellipsoid p2);
 
 };
