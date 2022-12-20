@@ -11,5 +11,3 @@ run: ${OUTPUT}
 	./${OUTPUT}
 
 compile_run: compile run
-
-

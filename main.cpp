@@ -4,7 +4,7 @@
 #include <iostream>
 #include <ostream>
 
-int main() {
+int main() { 
 	double scale_params[3] = {1,1,1};
 	double shape_params[2] = {10,20};
 	Superellipsoid p = Superellipsoid(0, scale_params, shape_params);
@@ -14,9 +14,10 @@ int main() {
 	p.set_center(center);
 	p.set_orientation(rot);
 
+	std::cout<<p.get_scale("a")<<std::endl;
 
 	Eigen::Vector3d x(0.5,0.5,0.5);
-	std::cout<<"INSIDE-OUTSIDE: "<<p.inside_outside_hess(x)<<std::endl;
+	std::cout<<"INSIDE-OUTSIDE: \n"<<p.inside_outside_hess(x)<<std::endl;
 
 	return 0;
 }

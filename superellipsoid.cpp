@@ -1,5 +1,3 @@
-#include <bits/types/wint_t.h>
-#include <boost/math/quaternion.hpp>
 #include <cmath>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/src/Core/Matrix.h>
