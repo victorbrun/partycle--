@@ -12,7 +12,7 @@ int main() {
 		double scale_params[3] = {1,1,1};
 		double shape_params[2] = {10,20};
 		super_arr[ix] = new Superellipsoid(0, scale_params, shape_params);
-		Eigen::Vector3d center(10-ix,10-ix,10-ix);
+		Eigen::Vector3d center(ix,ix,ix);
 		Eigen::Quaternion<double> rot(1,1,1,1);
 
 		super_arr[ix]->set_center(center);
@@ -21,10 +21,11 @@ int main() {
 
 	CoordinateIndexer ci = CoordinateIndexer(super_arr, n_particles);	
 	
-	double x_range[2] = {5, 10};
-	double y_range[2] = {5, 10};
-	double z_range[2] = {5, 10};
+	double x_range[2] = {4, 6};
+	double y_range[2] = {4, 6};
+	double z_range[2] = {4, 6};
 	std::vector<Superellipsoid*> result = ci.particles_in_domain(x_range, y_range, z_range);
+	
 	
 	for (int ix = 0; ix < result.size(); ix++) {
 		auto c = result[ix]->get_center();

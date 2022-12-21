@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <eigen3/Eigen/src/Core/Matrix.h>
+#include <ostream>
 #include <stdexcept>
 #include <vector>
 #include <iostream>
@@ -124,11 +125,38 @@ std::vector<Superellipsoid*> CoordinateIndexer::particles_in_domain(double x_ran
 				return this->particles[ix]->get_center()[2];				
 			});
 	
-	std::vector<int> x_particle_idx = std::vector<int>(this->particles_idx_x_sorted->begin() + x_lo, this->particles_idx_x_sorted->end() + x_hi);
-	std::vector<int> y_particle_idx = std::vector<int>(this->particles_idx_y_sorted->begin() + y_lo, this->particles_idx_y_sorted->end() + y_hi);
-	std::vector<int> z_particle_idx = std::vector<int>(this->particles_idx_z_sorted->begin() + z_lo, this->particles_idx_z_sorted->end() + z_hi);
+	std::vector<int> x_particle_idx = std::vector<int>(this->particles_idx_x_sorted->begin() + x_lo, this->particles_idx_x_sorted->begin() + x_hi);
+	std::vector<int> y_particle_idx = std::vector<int>(this->particles_idx_y_sorted->begin() + y_lo, this->particles_idx_y_sorted->begin() + y_hi);
+	std::vector<int> z_particle_idx = std::vector<int>(this->particles_idx_z_sorted->begin() + z_lo, this->particles_idx_z_sorted->begin() + z_hi);
 	std::vector<int> xy_particle_idx = this->intersect(x_particle_idx, y_particle_idx);
 	std::vector<int> xyz_particle_idx = this->intersect(xy_particle_idx, z_particle_idx);
+
+	std::cout << "x_lo = " << x_lo << " x_hi = " << x_hi << std::endl;
+	std::cout << "x_particle_idx = ";
+	for (int ix = 0; ix < x_particle_idx.size(); ix++) {
+		std::cout << x_particle_idx[ix] << " ";
+	}
+	std::cout << "\n";
+
+	std::cout << "y_lo = " << y_lo << " y_hi = " << y_hi << std::endl;
+	std::cout << "y_particle_idx = ";
+	for (int ix = 0; ix < y_particle_idx.size(); ix++) {
+		std::cout << y_particle_idx[ix] << " ";
+	}
+	std::cout << "\n";
+
+	std::cout << "z_lo = " << z_lo << " z_hi = " << z_hi << std::endl;
+	std::cout << "z_particle_idx = ";
+	for (int ix = 0; ix < z_particle_idx.size(); ix++) {
+		std::cout << z_particle_idx[ix] << " ";
+	}
+	std::cout << "\n";
+
+	std::cout << "xyz_particle_idx = ";
+	for (int ix = 0; ix < xyz_particle_idx.size(); ix++) {
+		std::cout << xyz_particle_idx[ix] << " ";
+	}
+	std::cout << "\n";
 
 	std::vector<Superellipsoid*> result(xyz_particle_idx.size());
 	for (int ix = 0; ix < result.size(); ix++) {
