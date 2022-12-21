@@ -79,8 +79,6 @@ double Superellipsoid::implicit_surface(Eigen::Vector3d x) {
 	double n2 	= this->get_shape("n2");
 
 	return std::pow( std::pow(std::abs(xl/a), n2) + std::pow(std::abs(yl/b), n2), n1/n2 ) + std::pow(std::abs(zl/c), n1);
-
-	return 0;
 }
 
 double Superellipsoid::inside_outside(Eigen::Vector3d x) {
