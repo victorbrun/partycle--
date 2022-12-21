@@ -1,22 +1,25 @@
 #include "superellipsoid.h"
+#include "coordinate_indexer.h"
 #include <eigen3/Eigen/src/Core/Matrix.h>
 #include <eigen3/Eigen/src/Geometry/Quaternion.h>
 #include <iostream>
-#include <ostream>
 
 int main() {
-	double scale_params[3] = {1,1,1};
-	double shape_params[2] = {10,20};
-	Superellipsoid p = Superellipsoid(0, scale_params, shape_params);
-	Eigen::Vector3d center(0,0,0);
-	Eigen::Quaternion<double> rot(1,1,1,1);
-	
-	p.set_center(center);
-	p.set_orientation(rot);
+	int n_particles = 10;
+	Superellipsoid* super_arr[10];
+	for (int ix = 0; ix < n_particles; ix++) {
+		double scale_params[3] = {1,1,1};
+		double shape_params[2] = {10,20};
+		super_arr[ix] = new Superellipsoid(0, scale_params, shape_params);
+		Eigen::Vector3d center(10-ix,0,0);
+		Eigen::Quaternion<double> rot(1,1,1,1);
 
+		super_arr[ix]->set_center(center);
+		super_arr[ix]->set_orientation(rot);
+	}
 
-	Eigen::Vector3d x(0.5,0.5,0.5);
-	std::cout<<"INSIDE-OUTSIDE: "<<p.inside_outside_hess(x)<<std::endl;
+	CoordinateIndexer ci = CoordinateIndexer(super_arr, n_particles);	
+
 
 	return 0;
 }

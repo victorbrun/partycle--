@@ -1,7 +1,7 @@
 COMPILER 	= clang++
 FLAGS 		= -Wall -o2
-SOURCES		= main.cpp superellipsoid.cpp
-HEADERS		= superellipsoid.h
+SOURCES		= main.cpp superellipsoid.cpp coordinate_indexer.cpp
+HEADERS		= superellipsoid.h coordinate_indexer.h
 OUTPUT 		= partycle--
 
 compile: ${SOURCES} ${HEADERS}

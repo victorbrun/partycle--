@@ -1,9 +1,9 @@
-#include <bits/types/wint_t.h>
-#include <boost/math/quaternion.hpp>
 #include <cmath>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/src/Core/Matrix.h>
 #include <eigen3/Eigen/src/Geometry/Quaternion.h>
+#include <iostream>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include "superellipsoid.h"
