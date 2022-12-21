@@ -125,9 +125,9 @@ std::vector<Superellipsoid*> CoordinateIndexer::particles_in_domain(double x_ran
 				return this->particles[ix]->get_center()[2];				
 			});
 	
-	std::vector<int> x_particle_idx = std::vector<int>(this->particles_idx_x_sorted->begin() + x_lo, this->particles_idx_x_sorted->begin() + x_hi);
-	std::vector<int> y_particle_idx = std::vector<int>(this->particles_idx_y_sorted->begin() + y_lo, this->particles_idx_y_sorted->begin() + y_hi);
-	std::vector<int> z_particle_idx = std::vector<int>(this->particles_idx_z_sorted->begin() + z_lo, this->particles_idx_z_sorted->begin() + z_hi);
+	std::vector<int> x_particle_idx = std::vector<int>(this->particles_idx_x_sorted->begin() + x_lo, this->particles_idx_x_sorted->begin() + x_hi + 1);
+	std::vector<int> y_particle_idx = std::vector<int>(this->particles_idx_y_sorted->begin() + y_lo, this->particles_idx_y_sorted->begin() + y_hi + 1);
+	std::vector<int> z_particle_idx = std::vector<int>(this->particles_idx_z_sorted->begin() + z_lo, this->particles_idx_z_sorted->begin() + z_hi + 1);
 	std::vector<int> xy_particle_idx = this->intersect(x_particle_idx, y_particle_idx);
 	std::vector<int> xyz_particle_idx = this->intersect(xy_particle_idx, z_particle_idx);
 
@@ -160,7 +160,8 @@ std::vector<Superellipsoid*> CoordinateIndexer::particles_in_domain(double x_ran
 
 	std::vector<Superellipsoid*> result(xyz_particle_idx.size());
 	for (int ix = 0; ix < result.size(); ix++) {
-		result.at(ix) = this->particles[ix];	
+		int idx = xyz_particle_idx.at(ix);
+		result.at(ix) = this->particles[idx];	
 	}
 
 	return result;
