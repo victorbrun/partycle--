@@ -7,9 +7,7 @@
 
 class CoordinateIndexer {
 	private:
-		Superellipsoid** particles;
-		int particles_len = 0;
-		int next_empty_index = 0; // Index of next element in particles which is unassigned.
+		std::vector<Superellipsoid*>* particles;
 		bool can_insert = false; // flag used to indicate if one can insert new particles. This depends on the constructor used.
 
 		/**
@@ -56,7 +54,7 @@ class CoordinateIndexer {
 		CoordinateIndexer();
 		
 		// Constructor for when particles are known.
-		CoordinateIndexer(Superellipsoid** particles, int n_particles);
+		CoordinateIndexer(std::vector<Superellipsoid*>* particles, int n_particles);
 		
 		// Constructor for when number of particles are known.
 		CoordinateIndexer(int n_particles);
@@ -68,7 +66,7 @@ class CoordinateIndexer {
 		void insert(Superellipsoid* p);
 
 		// Returns array of all particles.
-		Superellipsoid** get_particles();
+		std::vector<Superellipsoid*>* get_particles();
 	
 		// Returns number of particles in CoordinateIndexer.
 		int n_particles();

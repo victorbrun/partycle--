@@ -6,24 +6,24 @@
 #include <vector>
 
 int main() {
-	int n_particles = 10;
-	Superellipsoid* super_arr[10];
+	int n_particles = 10000000;
+	std::vector<Superellipsoid*>* super_arr = new std::vector<Superellipsoid*>(n_particles);
 	for (int ix = 0; ix < n_particles; ix++) {
 		double scale_params[3] = {1,1,1};
 		double shape_params[2] = {10,20};
-		super_arr[ix] = new Superellipsoid(0, scale_params, shape_params);
+		super_arr->at(ix) = new Superellipsoid(0, scale_params, shape_params);
 		Eigen::Vector3d center(ix,ix,ix);
 		Eigen::Quaternion<double> rot(1,1,1,1);
 
-		super_arr[ix]->set_center(center);
-		super_arr[ix]->set_orientation(rot);
+		super_arr->at(ix)->set_center(center);
+		super_arr->at(ix)->set_orientation(rot);
 	}
 
 	CoordinateIndexer ci = CoordinateIndexer(super_arr, n_particles);	
 	
-	double x_range[2] = {4, 6};
-	double y_range[2] = {4, 6};
-	double z_range[2] = {4, 6};
+	double x_range[2] = {4, 20};
+	double y_range[2] = {4, 20};
+	double z_range[2] = {4, 20};
 	std::vector<Superellipsoid*> result = ci.particles_in_domain(x_range, y_range, z_range);
 	
 	
