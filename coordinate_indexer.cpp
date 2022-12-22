@@ -47,7 +47,17 @@ std::vector<int> CoordinateIndexer::intersect(std::vector<int>& v1, std::vector<
 
 CoordinateIndexer::CoordinateIndexer() {}
 
-CoordinateIndexer::CoordinateIndexer(int n_particles) {}
+CoordinateIndexer::CoordinateIndexer(int n_particles) {
+	this->particles = new std::vector<Superellipsoid*>(n_particles);
+
+	// Initiates the index vectors which will be n_particles large eventually
+	this->particles_idx_x_sorted = new std::vector<int>;
+	this->particles_idx_y_sorted = new std::vector<int>;
+	this->particles_idx_z_sorted = new std::vector<int>;
+
+	// Sets flag so that insert of particles is possible
+	this->can_add_particle = true;
+}
 
 CoordinateIndexer::CoordinateIndexer(std::vector<Superellipsoid*>*particles, int n_particles) {
 	this->particles = particles;
@@ -80,8 +90,30 @@ CoordinateIndexer::CoordinateIndexer(std::vector<Superellipsoid*>*particles, int
 			});	
 }
 
-void CoordinateIndexer::insert(Superellipsoid* p) {
-	throw std::domain_error("ERROR: cannot insert new particle when object have been initialised using current constructor");
+void CoordinateIndexer::add_particle(Superellipsoid* p) {
+	if (!this->can_add_particle) throw std::domain_error("ERROR: cannot insert new particle when object have been initialised using current constructor");
+
+	// The particles vector has no ordering so we just append
+	this->particles->push_back(p);
+	int new_idx = this->n_particles()-1;
+
+	// Computes the place to insert the new particle 
+	// to keep the indeces ordered
+	Eigen::Vector3d c = p->get_center();
+	int x_insert_idx = this->binary_search_insert_idx(this->particles_idx_x_sorted, c[0], [this](int ix) -> double {
+				return this->get_particles()->at(ix)->get_center()[0];
+			});
+	int y_insert_idx = this->binary_search_insert_idx(this->particles_idx_y_sorted, c[1], [this](int ix) -> double {
+				return this->get_particles()->at(ix)->get_center()[1];
+			});
+	int z_insert_idx = this->binary_search_insert_idx(this->particles_idx_z_sorted, c[2], [this](int ix) -> double {
+				return this->get_particles()->at(ix)->get_center()[2];
+			});
+
+	// Inserts the new particle's index into each vector 
+	particles_idx_x_sorted->insert(this->particles_idx_x_sorted->begin() + x_insert_idx, new_idx);
+	particles_idx_y_sorted->insert(this->particles_idx_y_sorted->begin() + y_insert_idx, new_idx);
+	particles_idx_z_sorted->insert(this->particles_idx_z_sorted->begin() + z_insert_idx, new_idx);
 }
 
 void CoordinateIndexer::destroy() {
@@ -128,33 +160,6 @@ std::vector<Superellipsoid*> CoordinateIndexer::particles_in_domain(double x_ran
 	std::vector<int> z_particle_idx = std::vector<int>(this->particles_idx_z_sorted->begin() + z_lo, this->particles_idx_z_sorted->begin() + z_hi + 1);
 	std::vector<int> xy_particle_idx = this->intersect(x_particle_idx, y_particle_idx);
 	std::vector<int> xyz_particle_idx = this->intersect(xy_particle_idx, z_particle_idx);
-
-	std::cout << "x_lo = " << x_lo << " x_hi = " << x_hi << std::endl;
-	std::cout << "x_particle_idx = ";
-	for (int ix = 0; ix < x_particle_idx.size(); ix++) {
-		std::cout << x_particle_idx[ix] << " ";
-	}
-	std::cout << "\n";
-
-	std::cout << "y_lo = " << y_lo << " y_hi = " << y_hi << std::endl;
-	std::cout << "y_particle_idx = ";
-	for (int ix = 0; ix < y_particle_idx.size(); ix++) {
-		std::cout << y_particle_idx[ix] << " ";
-	}
-	std::cout << "\n";
-
-	std::cout << "z_lo = " << z_lo << " z_hi = " << z_hi << std::endl;
-	std::cout << "z_particle_idx = ";
-	for (int ix = 0; ix < z_particle_idx.size(); ix++) {
-		std::cout << z_particle_idx[ix] << " ";
-	}
-	std::cout << "\n";
-
-	std::cout << "xyz_particle_idx = ";
-	for (int ix = 0; ix < xyz_particle_idx.size(); ix++) {
-		std::cout << xyz_particle_idx[ix] << " ";
-	}
-	std::cout << "\n";
 
 	std::vector<Superellipsoid*> result(xyz_particle_idx.size());
 	for (int ix = 0; ix < result.size(); ix++) {
