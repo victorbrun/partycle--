@@ -36,16 +36,26 @@ class Domain {
 		 */
 		int binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* mobile_particle);
 
+		/**
+		 * Returns array of particles whose center lie in the domain defined by `x_range`x`y_range`x`z_range`.
+		 *
+		 * @param `x_range`: array of 2 doubles defining x-axis range. Smallest value is at index 0 and larges is at index 1.
+		 * @param `y_range`: array of 2 doubles defining y-axis range. Smallest value is at index 0 and larges is at index 1.
+		 * @param `z_range`: array of 2 doubles defining z-axis range. Smallest value is at index 0 and larges is at index 1.
+		 * @return vector of pointers to superellipsoids all of which lie in the domain defined by `x_range`x`y_range`x`z_range`.
+		 */
 		std::vector<Superellipsoid*> particles_in_subdomain(float* x_range, float* y_range, float* z_range);
 	
 	public:
 		// Constructor without particles or numbe rof particles to be added known
 		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol);
-		// Constructor with particles available
-		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, std::vector<Superellipsoid*>* particles);
+		
 		// Constructor with number of particles to be added known
 		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, int n_particles);
 
+		// Constructor with particles available
+		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, std::vector<Superellipsoid*>* particles);
+		
 		int n_particles();
 		
 		// Adds `p` to the domain

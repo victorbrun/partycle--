@@ -56,7 +56,7 @@ CoordinateIndexer::CoordinateIndexer(int n_particles) {
 	this->particles_idx_z_sorted = new std::vector<int>;
 }
 
-CoordinateIndexer::CoordinateIndexer(std::vector<Superellipsoid*>*particles, int n_particles) {
+CoordinateIndexer::CoordinateIndexer(std::vector<Superellipsoid*>*particles) {
 	this->particles = particles;
 
 	// Initialise arrays to index the particles by their center coordniates

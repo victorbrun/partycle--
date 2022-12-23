@@ -70,7 +70,7 @@ class CoordinateIndexer {
 		int n_particles();
 
 		/**
-		 * Returns array of particles whose center lie in the domain define by `x_range`x`y_range`x`z_range`.
+		 * Returns array of particles whose center lie in the domain defined by `x_range`x`y_range`x`z_range`.
 		 *
 		 * @param `x_range`: array of 2 doubles defining x-axis range. Smallest value is at index 0 and larges is at index 1.
 		 * @param `y_range`: array of 2 doubles defining y-axis range. Smallest value is at index 0 and larges is at index 1.
