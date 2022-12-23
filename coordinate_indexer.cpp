@@ -54,9 +54,6 @@ CoordinateIndexer::CoordinateIndexer(int n_particles) {
 	this->particles_idx_x_sorted = new std::vector<int>;
 	this->particles_idx_y_sorted = new std::vector<int>;
 	this->particles_idx_z_sorted = new std::vector<int>;
-
-	// Sets flag so that insert of particles is possible
-	this->can_add_particle = true;
 }
 
 CoordinateIndexer::CoordinateIndexer(std::vector<Superellipsoid*>*particles, int n_particles) {
@@ -91,8 +88,6 @@ CoordinateIndexer::CoordinateIndexer(std::vector<Superellipsoid*>*particles, int
 }
 
 void CoordinateIndexer::add_particle(Superellipsoid* p) {
-	if (!this->can_add_particle) throw std::domain_error("ERROR: cannot insert new particle when object have been initialised using current constructor");
-
 	// The particles vector has no ordering so we just append
 	this->particles->push_back(p);
 	int new_idx = this->n_particles()-1;

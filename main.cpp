@@ -31,7 +31,6 @@ int main() {
 		std::cout << "ix =" << ix << ": (x,y,z) = (" << c[0] << "," << c[1] << "," << c[2] << ")" << std::endl;
 	}
 
-	CoordinateIndexer ci2 = CoordinateIndexer(n_particles);
 	for (int ix = 0; ix < n_particles; ix++) {
 		double scale_params[3] = {1,1,1};
 		double shape_params[2] = {10,20};
@@ -42,11 +41,11 @@ int main() {
 		p->set_center(center);
 		p->set_orientation(rot);
 		
-		ci2.add_particle(p);
+		ci.add_particle(p);
 	}
 
 	std::cout << "\n";
-	result = ci2.particles_in_domain(x_range, y_range, z_range);	
+	result = ci.particles_in_domain(x_range, y_range, z_range);	
 	for (int ix = 0; ix < result.size(); ix++) {
 		auto c = result[ix]->get_center();
 		std::cout << "ix =" << ix << ": (x,y,z) = (" << c[0] << "," << c[1] << "," << c[2] << ")" << std::endl;

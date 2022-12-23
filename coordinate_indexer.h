@@ -8,8 +8,6 @@
 class CoordinateIndexer {
 	private:
 		std::vector<Superellipsoid*>* particles;
-		bool can_add_particle = false; // flag used to indicate if one can insert new particles. This depends on the constructor used.
-
 		/**
 		 * Indeces of particles in particles array sorted 
 		 * by their x, y and z coordinates respectively.
