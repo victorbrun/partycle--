@@ -52,7 +52,7 @@ class CoordinateIndexer {
 		CoordinateIndexer();
 		
 		// Constructor for when particles are known.
-		CoordinateIndexer(std::vector<Superellipsoid*>* particles, int n_particles);
+		CoordinateIndexer(std::vector<Superellipsoid*>* particles);
 		
 		// Constructor for when number of particles are known.
 		CoordinateIndexer(int n_particles);

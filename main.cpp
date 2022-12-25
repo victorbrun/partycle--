@@ -19,7 +19,7 @@ int main() {
 		super_arr->at(ix)->set_orientation(rot);
 	}
 
-	CoordinateIndexer ci = CoordinateIndexer(super_arr, n_particles);	
+	CoordinateIndexer ci = CoordinateIndexer(super_arr);	
 	
 	double x_range[2] = {4, 20};
 	double y_range[2] = {4, 20};

@@ -44,7 +44,7 @@ class Domain {
 		 * @param `z_range`: array of 2 doubles defining z-axis range. Smallest value is at index 0 and larges is at index 1.
 		 * @return vector of pointers to superellipsoids all of which lie in the domain defined by `x_range`x`y_range`x`z_range`.
 		 */
-		std::vector<Superellipsoid*> particles_in_subdomain(float* x_range, float* y_range, float* z_range);
+		std::vector<Superellipsoid*> particles_in_subdomain(double* x_range, double* y_range, double* z_range);
 	
 	public:
 		// Constructor without particles or numbe rof particles to be added known
