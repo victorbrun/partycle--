@@ -25,7 +25,17 @@ class Domain {
 
 		// Removes removes the given particle pointer from the advancing front.
 		void remove_particle_af(Superellipsoid* p);
-	
+
+		/**
+		 * Adds particle to advancing front. It does not check
+		 * if `p` is already in advancing_front, it can thus
+		 * produce an advancing_front which has several entries
+		 * pointing to the same superellipsoid.
+		 *
+		 * @param `p`: pointer to the superellipsoid which is to be added to advancing_front.
+		 */
+		void add_particle_af(Superellipsoid* p);
+
 		/**
 		 * Performes binary approach moving `mobile_particle` toward the average of the centers of `fixed_particles`.
 		 * The function returns an int specifying the exit state.
