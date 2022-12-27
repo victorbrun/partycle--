@@ -61,11 +61,18 @@ double Superellipsoid::get_shape(std::string param_name) {
 void Superellipsoid::set_center(Eigen::Vector3d c) { this->c = c; }
 void Superellipsoid::set_orientation(Eigen::Quaternion<double> q) { this->q = q; }
 
-double Superellipsoid::enclosing_sphere_radius() {
+double Superellipsoid::circumscribed_sphere_radius() {
 	double a = this->get_scale("a");
 	double b = this->get_scale("b");
 	double c = this->get_scale("c");
 	return std::sqrt( a*a + b*b + c*c );
+}
+
+double Superellipsoid::inscribed_sphere_radius() {
+	double a = this->get_scale("a");
+	double b = this->get_scale("b");
+	double c = this->get_scale("c");
+	return std::fmin( std::fmin(a, b), c );
 }
 
 Eigen::Vector3d Superellipsoid::to_local_coords(Eigen::Vector3d x) {

@@ -81,10 +81,16 @@ class Superellipsoid {
 		double parametric_surface(double eta, double omega);
 		
 		// Returns radius of smallest sphere enclosing whole Superellipsoid.
-		double enclosing_sphere_radius();
+		double circumscribed_sphere_radius();
+
+		// Returns radius of largest sphere enclosed by Superellipsoid
+		double inscribed_sphere_radius();
 		
-		// Returns minimum distance between `p1` and `p2`.
-		static double distance(Superellipsoid p1, Superellipsoid p2);
+		/**
+		 * Returns bool indicating if computation succeeded and minimum 
+		 * distance between `p1` and `p2`.
+		 */		
+		static std::tuple<bool, double> distance(Superellipsoid* p1, Superellipsoid* p2);
 };
 
 #endif
