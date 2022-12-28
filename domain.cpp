@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <tuple>
 
 /***** Auxilirary functions *****/
 
@@ -135,9 +136,12 @@ int Domain::binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* 
 	}
 	Eigen::Vector3d starting_point = mid_point + r_max * n_vec;
 
-	double step_size = 0;
+	double lambda = 0; // When this is 1 new_center is equal to mid_point
+	double lambda_hi = 1;
+	double lambda_lo = 0;
 	while ( true ) {
-		Eigen::Vector3d new_center = starting_point - step_size*n_vec;
+		Eigen::Vector3d new_center = starting_point - lambda*r_max*n_vec;
+		mobile_particle->set_center(new_center);
 
 		// Domain which can include particles to colide with
 		// TODO: this domain can be shrunk and do not need to 
@@ -149,18 +153,36 @@ int Domain::binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* 
 		std::vector<Superellipsoid*> possible_collisions = this->particles_in_subdomain(x_bounds, y_bounds, z_bounds);
 	
 		// Loops through possible collisions and checks for collisions
+		bool collision = false; // Initialises to flase will make it cover the case when possible_collisions.size() = 0.
 		for (int ix = 0; ix < possible_collisions.size(); ix++) {
 			std::tuple<bool,double> coll_dist = check_collision(mobile_particle, possible_collisions[ix]);
-			bool collision = std::get<0>(coll_dist);
-			double dist = std::get<1>(coll_dist);
-
-			if (collision) {
-				std::cout << "[INFO]: collision detected between mobile particle and "
-						  << possible_collisions[ix] << std::endl;
-			} else {
-				
-			}
+			collision = std::get<0>(coll_dist);
+			
+			// Exits collision check loop on first collision
+			if (collision) break;
 		}
+
+		// Computes distance between mobile particle and fixed particles
+		double mobile_fixed_dist[3];
+		for (int ix = 0; ix < 3; ix++) {
+			std::tuple<bool,double> temp = Superellipsoid::distance(mobile_particle, fixed_particles[ix]);
+			mobile_fixed_dist[ix] = std::get<1>(temp);
+		}
+
+		if (collision) {
+			// If we have collision we take a step away from mid_point
+			std::cout << "[INFO]: collision detected between mobile particle and at least one other particle." << std::endl;
+			lambda_lo = lambda;
+		} else if (mobile_fixed_dist[0] <= this->contact_tol || mobile_fixed_dist[1] <= this->contact_tol || mobile_fixed_dist[2] <= this->contact_tol) {
+			// If mobile particle is close enough to any of the fixed particles we terminate
+			break;
+		} else {
+			// If no collision nor close enough to fixed particle 
+			// we take a step towards mid_point
+			lambda_hi = lambda;
+		}
+		// Updates step length and direction 
+		lambda = lambda_lo + (lambda_hi - lambda_lo)/2;
 	}	
 
 	return 0;

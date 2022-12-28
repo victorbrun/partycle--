@@ -50,8 +50,8 @@ class Domain {
 		void initialise_outward_advancing_front(Superellipsoid* particles[4]);
 
 		/**
-		 * Performes binary approach moving `mobile_particle` toward the average of the centers of `fixed_particles`.
-		 * The function returns an int specifying the exit state.
+		 * Performes binary approach moving `mobile_particle` as close to the average of the centers of `fixed_particles`
+		 * without overlapping any particle. The function returns an int specifying the exit state.
 		 *
 		 * @param `fixed_particles`: array of three pointers to Superellipsoids.
 		 * @param `mobile_particle`: pointer to particle which is moved.
