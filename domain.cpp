@@ -136,12 +136,14 @@ int Domain::binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* 
 	}
 	Eigen::Vector3d starting_point = mid_point + r_max * n_vec;
 
+	int relocation_counter = 0;
 	double lambda = 0; // When this is 1 new_center is equal to mid_point
 	double lambda_hi = 1;
 	double lambda_lo = 0;
 	while ( true ) {
 		Eigen::Vector3d new_center = starting_point - lambda*r_max*n_vec;
 		mobile_particle->set_center(new_center);
+		relocation_counter++;
 
 		// Domain which can include particles to colide with
 		// TODO: this domain can be shrunk and do not need to 
@@ -184,7 +186,8 @@ int Domain::binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* 
 		// Updates step length and direction 
 		lambda = lambda_lo + (lambda_hi - lambda_lo)/2;
 	}	
-
+	
+	std::cout << "[INFO]: relocated particle " << relocation_counter << " times." << std::endl;
 	return 0;
 }
 
