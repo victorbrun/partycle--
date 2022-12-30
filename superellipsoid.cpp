@@ -1,3 +1,4 @@
+#define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1	
 #include <cmath>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/src/Core/Matrix.h>
@@ -60,6 +61,16 @@ double Superellipsoid::get_shape(std::string param_name) {
 
 void Superellipsoid::set_center(Eigen::Vector3d c) { this->c = c; }
 void Superellipsoid::set_orientation(Eigen::Quaternion<double> q) { this->q = q; }
+
+double Superellipsoid::volume() {
+	double a = this->get_scale("a");
+	double b = this->get_scale("b");
+	double c = this->get_scale("c");
+	double n1 = this->get_shape("n1");
+	double n2 = this->get_shape("n2");
+
+	return 8 * a * b * c * (1/n1) * (1/n2) * std::beta(1/n1 + 1, 2/n1) * std::beta(1/n1, 1/n1);
+}
 
 double Superellipsoid::circumscribed_sphere_radius() {
 	double a = this->get_scale("a");

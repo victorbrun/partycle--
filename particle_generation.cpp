@@ -1,6 +1,8 @@
 #include "particle_generation.h"
 #include "superellipsoid.h"
 #include <algorithm>
+#include <eigen3/Eigen/src/Core/util/Constants.h>
+#include <functional>
 #include <iostream>
 #include <ostream>
 #include <stdexcept>
@@ -26,6 +28,13 @@ std::vector<Superellipsoid*>* generate_random_particles(std::vector<ParticleDist
 		}
 	}
 
+	std::vector<double> exp_vols;
+	exp_vols = expected_volumes(particle_distributions);
+
+	// Initialises random number generator
+	std::random_device rd;
+	std::mt19937 mt(rd());
+
 	// Allocates vector on heap and generates random particles
 	std::vector<Superellipsoid*>* particles = new std::vector<Superellipsoid*>(n_particles); 	
 	for (int ix = 0; ix < n_particles; ix++) {
@@ -35,33 +44,75 @@ std::vector<Superellipsoid*>* generate_random_particles(std::vector<ParticleDist
 	return particles;
 }
 
-std::vector<double> uniform_sampler(double lower_bound, double upper_bound) {
-	std::random_device rd;
-	std::mt19937 mt(rd());
-	std::uniform_real_distribution<double> dist(lower_bound, upper_bound);
-
-	std::vector<double> v = {dist(mt)};
-	return v;
-}
-
-std::vector<double> (*parse_distribution(std::string distr_string))(void) {
+Distribution parse_distribution(std::string distr_string) {
 	int open_bracket_idx = distr_string.find("(");
 	std::string distr_name = distr_string.substr(0, open_bracket_idx);
 	std::string param_string = distr_string.substr(open_bracket_idx + 1, distr_string.size() - open_bracket_idx - 2);
-
-	std::cout << "D = " << distr_name << ", params = " << param_string << std::endl;
-
+	
+	std::vector<double> param_vec;
 	if (distr_name == "uniform") {
 		int comma_idx = param_string.find(",");
 		double lower_bound = std::stod(param_string.substr(0, comma_idx));
 		double upper_bound = std::stod(param_string.substr(comma_idx + 1));
-		return &uniform_sampler;
+		
+		param_vec.push_back(lower_bound);
+		param_vec.push_back(lower_bound);
+
 	} else if (distr_name == "normal") {
+		int comma_idx = param_string.find(",");
+		double mu = std::stod(param_string.substr(0, comma_idx));
+		double sigma = std::stod(param_string.substr(comma_idx + 1));
+		
+		param_vec.push_back(mu);
+		param_vec.push_back(sigma);
 
 	} else if (distr_name == "log-normal") {
+		int comma_idx = param_string.find(",");
+		double mu = std::stod(param_string.substr(0, comma_idx));
+		double sigma = std::stod(param_string.substr(comma_idx + 1));
+			
+		param_vec.push_back(mu);
+		param_vec.push_back(sigma);
 
 	} else {
 		throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");
 	}
 
+	Distribution parsed_distr;
+	parsed_distr.name = distr_name;
+	parsed_distr.args = param_vec;
+	return parsed_distr;
 }
+
+std::vector<int> expected_particles_needed(std::vector<double> expected_volumes, std::vector<double> target_volume_fractions) {
+	// Allocates LHS and RHS of linear system
+	Eigen::VectorXd b(expected_volumes.size());
+	Eigen::MatrixXd A(expected_volumes.size(), expected_volumes.size());
+
+	// Computes values for b and A entries
+	for (int ix = 0; ix < A.rows(); ix++) {
+		b(ix) = 0;
+		for (int jx = 0; jx < A.cols(); jx++) {
+			A(ix,jx) = (ix == jx) ? 
+				expected_volumes.at(jx)*(1 - target_volume_fractions.at(jx)) : 
+				expected_volumes.at(jx)*target_volume_fractions.at(jx);
+		}
+	}
+
+	// Solves linear system using Householder rank-revealing QR decomp. with column pivoting. 
+	Eigen::VectorXd x(expected_volumes.size());
+	x = A.colPivHouseholderQr().solve(b);
+
+	// Rounds and collects answer
+	std::vector<int> n(expected_volumes.size());
+	for (int ix = 0; ix < expected_volumes.size(); ix++) {
+		n.at(ix) = (int) std::round(x(ix));
+	}
+
+	return n;
+}
+
+std::vector<double> expected_volumes(std::vector<ParticleDistribution> particle_distributions) {
+
+}
+

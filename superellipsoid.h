@@ -48,6 +48,9 @@ class Superellipsoid {
 		// Sets the orientation of the Superellipsoid
 		void set_orientation(Eigen::Quaternion<double> q);
 	
+		// Computes the volume for the current Superellipsoid
+		double volume();
+	
 		/*
 		 * Computes the value of left hand side of below implicit function, which defines the Superellipsoid surface:
 		 * 		( |x/a|^n2 + |y/b|^n2 )^(n1/n2) + |z/c|^n1 = 1
