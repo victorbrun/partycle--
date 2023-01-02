@@ -1,4 +1,3 @@
-#include "particle_generation.h"
 #include "superellipsoid.h"
 #include "coordinate_indexer.h"
 #include <eigen3/Eigen/src/Core/Matrix.h>
@@ -53,8 +52,6 @@ int main() {
 		auto c = result[ix]->get_center();
 		std::cout << "ix =" << ix << ": (x,y,z) = (" << c[0] << "," << c[1] << "," << c[2] << ")" << std::endl;
 	}
-
-	std::vector<double> test = parse_distribution("uniform(1000.98,20)")();
 
 	return 0;
 }
