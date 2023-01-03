@@ -28,17 +28,28 @@ std::vector<Superellipsoid*>* generate_random_particles(std::vector<ParticleDist
 		}
 	}
 
-	std::vector<double> exp_vols;
-	exp_vols = expected_volumes(particle_distributions);
+	// Compute sthe expected volumes for a particle from each article distribution
+	// and computes the expected number of particles needed for each particle distribution
+	// to on average get the target volume fraction 
+	std::vector<double> exp_vols = expected_volumes(particle_distributions);
+	std::vector<int> exp_n_particles = expected_particles_needed(exp_vols, volume_fractions);
 
-	// Initialises random number generator
+	// Allocates vector on heap to store particles 
+	std::vector<Superellipsoid*>* particles = new std::vector<Superellipsoid*>(n_particles);
+
+	// Initialises random number generator.
 	std::random_device rd;
 	std::mt19937 mt(rd());
-
-	// Allocates vector on heap and generates random particles
-	std::vector<Superellipsoid*>* particles = new std::vector<Superellipsoid*>(n_particles); 	
-	for (int ix = 0; ix < n_particles; ix++) {
-		
+	
+	// exp_vols, exp_n_particles, and particle_distributions are all index aligned
+	// so we iterate over the particle distributions and generates the expected 
+	// number of needed particles for each distribution and saves them to the heap
+	for (int ix = 0; particle_distributions.size(); ix++) {
+		Distribution distr = particle_distributions.at(ix).volume_distribution;			
+		// TODO: enusre that sum(exp_n_particles) <= n_particles
+		for (int jx = 0; jx < exp_n_particles.at(ix); ix++) {
+							
+		}
 	}
 
 	return particles;

@@ -3,12 +3,13 @@
 #include "coordinate_indexer.hpp" 
 #include <eigen3/Eigen/src/Core/Matrix.h>
 #include <eigen3/Eigen/src/Geometry/Quaternion.h>
-#include <functional>
 #include <iostream>
+#include <random>
 #include <stdexcept>
 #include <vector>
 
 int main() {
+	/*
 	int n_particles = 100;
 	std::vector<Superellipsoid*>* super_arr = new std::vector<Superellipsoid*>(n_particles);
 	for (int ix = 0; ix < n_particles; ix++) {
@@ -48,6 +49,14 @@ int main() {
 	}
 
 	std::cout << "volume: " << super_arr->at(0)->volume() << std::endl;
+	*/
+	
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	
+	std::normal_distribution<double> d;
+	d = std::normal_distribution<double>(1,1);
+	std::cout << d(mt) << std::endl;
 
 	return 0;
 }
