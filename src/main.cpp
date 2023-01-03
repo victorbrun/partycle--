@@ -60,7 +60,7 @@ int main() {
     plot(x, transform(x, [](auto x) { return x / pi - 1.; }), "-:gs");
     plot({1.0, 0.7, 0.4, 0.0, -0.4, -0.7, -1}, "k");
 
-    show();
+    save("img/test.png");
 
 	return 0;
 }
