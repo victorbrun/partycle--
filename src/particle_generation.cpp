@@ -7,7 +7,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <random>
-/*
+
 std::vector<Superellipsoid*>* generate_random_particles(std::vector<ParticleDistribution> particle_distributions, 
 														std::vector<double> volume_fractions, 
 														int n_particles) 
@@ -43,7 +43,6 @@ std::vector<Superellipsoid*>* generate_random_particles(std::vector<ParticleDist
 
 	return particles;
 }
-*/
 
 Distribution parse_distribution(std::string distr_string) {
 	int open_bracket_idx = distr_string.find("(");
@@ -113,7 +112,6 @@ std::vector<int> expected_particles_needed(std::vector<double> expected_volumes,
 	return n;
 }
 
-/*
 std::vector<double> expected_volumes(std::vector<ParticleDistribution> particle_distributions) {
 	std::vector<double> ev(particle_distributions.size());
 	for (int ix = 0; ix < particle_distributions.size(); ix++) {
@@ -129,7 +127,9 @@ std::vector<double> expected_volumes(std::vector<ParticleDistribution> particle_
 			double mu = distr.args.at(0);
 			double sigma = distr.args.at(1);
 			ev.at(ix) = std::exp(mu + sigma*sigma/2);
+		} else {
+			throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");
 		}
 	}
+	return ev;
 }
-*/
