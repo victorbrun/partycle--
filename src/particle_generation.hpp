@@ -1,7 +1,7 @@
 #ifndef PARTICLE_GENERATION_H
 #define PARTICLE_GENERATION_H
 
-#include "superellipsoid.h"
+#include "superellipsoid.hpp"
 #include <vector>
 
 struct Distribution {

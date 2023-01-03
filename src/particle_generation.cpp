@@ -1,5 +1,5 @@
-#include "particle_generation.h"
-#include "superellipsoid.h"
+#include "particle_generation.hpp"
+#include "superellipsoid.hpp"
 #include <algorithm>
 #include <eigen3/Eigen/src/Core/util/Constants.h>
 #include <functional>
@@ -7,7 +7,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <random>
-
+/*
 std::vector<Superellipsoid*>* generate_random_particles(std::vector<ParticleDistribution> particle_distributions, 
 														std::vector<double> volume_fractions, 
 														int n_particles) 
@@ -43,6 +43,7 @@ std::vector<Superellipsoid*>* generate_random_particles(std::vector<ParticleDist
 
 	return particles;
 }
+*/
 
 Distribution parse_distribution(std::string distr_string) {
 	int open_bracket_idx = distr_string.find("(");
@@ -112,7 +113,23 @@ std::vector<int> expected_particles_needed(std::vector<double> expected_volumes,
 	return n;
 }
 
+/*
 std::vector<double> expected_volumes(std::vector<ParticleDistribution> particle_distributions) {
-
+	std::vector<double> ev(particle_distributions.size());
+	for (int ix = 0; ix < particle_distributions.size(); ix++) {
+		Distribution distr = particle_distributions.at(ix).volume_distribution;
+		if (distr.name == "uniform") {
+			double lb = distr.args.at(0); 
+			double ub = distr.args.at(1);
+			ev.at(ix) = (ub - lb)/2;
+		} else if (distr.name == "normal") {
+			ev.at(ix) = distr.args.at(0); // mu is at first index in vector
+		} else if (distr.name == "lognormal") {
+			// Our representation is on the form lognormal(mu, sigma)
+			double mu = distr.args.at(0);
+			double sigma = distr.args.at(1);
+			ev.at(ix) = std::exp(mu + sigma*sigma/2);
+		}
+	}
 }
-
+*/

@@ -1,12 +1,13 @@
-#include "particle_generation.h"
-#include "superellipsoid.h"
-#include "coordinate_indexer.h"
+#include "particle_generation.hpp"
+#include "superellipsoid.hpp" 
+#include "coordinate_indexer.hpp" 
 #include <eigen3/Eigen/src/Core/Matrix.h>
 #include <eigen3/Eigen/src/Geometry/Quaternion.h>
 #include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <matplot/matplot.h>
 
 int main() {
 	int n_particles = 100;
@@ -48,6 +49,18 @@ int main() {
 	}
 
 	std::cout << "volume: " << super_arr->at(0)->volume() << std::endl;
+
+	using namespace matplot;
+    std::vector<double> x = linspace(0, 2 * pi);
+    std::vector<double> y = transform(x, [](auto x) { return sin(x); });
+
+    plot(x, y, "-o");
+    hold(on);
+    plot(x, transform(y, [](auto y) { return -y; }), "--xr");
+    plot(x, transform(x, [](auto x) { return x / pi - 1.; }), "-:gs");
+    plot({1.0, 0.7, 0.4, 0.0, -0.4, -0.7, -1}, "k");
+
+    show();
 
 	return 0;
 }

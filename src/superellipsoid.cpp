@@ -7,7 +7,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
-#include "superellipsoid.h"
+#include "superellipsoid.hpp"
 
 // Sign function. Returns the sign of input and 0 if input is 0.
 template <typename T> int sgn(T val) {

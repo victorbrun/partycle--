@@ -1,5 +1,5 @@
-#include "domain.h"
-#include "superellipsoid.h"
+#include "domain.hpp"
+#include "superellipsoid.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -17,6 +17,7 @@
  * 		   is the minimum distance between two points, one on each
  * 		   superellipsoid.
  */
+/*
 std::tuple<bool, double> check_collision(Superellipsoid* p1, Superellipsoid* p2) {
 	Eigen::Vector3d c1 = p1->get_center();
 	Eigen::Vector3d c2 = p2->get_center();
@@ -46,7 +47,7 @@ std::tuple<bool, double> check_collision(Superellipsoid* p1, Superellipsoid* p2)
 	}
 	return ret;
 }
-
+*/
 /***** Private *****/
 
 void Domain::remove_particle_af(Superellipsoid* p) { 
@@ -103,7 +104,7 @@ void Domain::initialise_outward_advancing_front(Superellipsoid* particles[4]) {
 	
 }
 
-
+/*
 int Domain::binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* mobile_particle) { 
 	Superellipsoid* fp1 = fixed_particles[0];
 	Superellipsoid* fp2 = fixed_particles[1];
@@ -190,7 +191,7 @@ int Domain::binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* 
 	std::cout << "[INFO]: relocated particle " << relocation_counter << " times." << std::endl;
 	return 0;
 }
-
+*/
 /***** Public *****/
 
 Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol) {

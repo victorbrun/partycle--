@@ -1,7 +1,7 @@
 #ifndef COORDINATE_INDEXER_H
 #define COORDINATE_INDEXER_H
 
-#include "superellipsoid.h"
+#include "superellipsoid.hpp"
 #include <functional>
 #include <vector>
 

@@ -1,8 +1,8 @@
 #ifndef DOMAIN_H
 #define DOMAIN_H
 
-#include "superellipsoid.h"
-#include "coordinate_indexer.h"
+#include "superellipsoid.hpp"
+#include "coordinate_indexer.hpp"
 #include <eigen3/Eigen/Sparse>
 #include <vector>
 
