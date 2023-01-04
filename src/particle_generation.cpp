@@ -1,7 +1,9 @@
 #include "particle_generation.hpp"
 #include "superellipsoid.hpp"
 #include <algorithm>
+#include <cmath>
 #include <eigen3/Eigen/src/Core/util/Constants.h>
+#include <eigen3/Eigen/src/Geometry/Quaternion.h>
 #include <functional>
 #include <iostream>
 #include <ostream>
@@ -44,11 +46,24 @@ std::vector<Superellipsoid*>* generate_random_particles(std::vector<ParticleDist
 	// exp_vols, exp_n_particles, and particle_distributions are all index aligned
 	// so we iterate over the particle distributions and generates the expected 
 	// number of needed particles for each distribution and saves them to the heap
+	int kx = 0; // Keeps track of index in particles vector 
 	for (int ix = 0; particle_distributions.size(); ix++) {
-		Distribution distr = particle_distributions.at(ix).volume_distribution;			
+		int cls = particle_distributions.at(ix).cls;
+		Distribution d = particle_distributions.at(ix).volume_distribution;
+		std::function<double(void)> sampler = get_sampler(d, mt);
+
+		// Extracts parameter for reference particle
+		Superellipsoid p = particle_distributions.at(ix).reference_particle;
+		double scale_params[3] = {p.get_scale("a"), p.get_scale("b"), p.get_scale("c")};
+		double shape_params[2] = {p.get_shape("n1"), p.get_shape("n2")};
+
+
 		// TODO: enusre that sum(exp_n_particles) <= n_particles
-		for (int jx = 0; jx < exp_n_particles.at(ix); ix++) {
-							
+		for (int jx = 0; jx < exp_n_particles.at(ix); jx++) {
+			// Creates new superellipsoid on heap, scales it and 
+			// put reference to it in return vector
+			Superellipsoid* new_p = new Superellipsoid(cls, scale_params, shape_params);
+
 		}
 	}
 
@@ -144,3 +159,39 @@ std::vector<double> expected_volumes(std::vector<ParticleDistribution> particle_
 	}
 	return ev;
 }
+
+std::function<double(void)> get_sampler(const Distribution& d, std::mt19937& mt) {
+	// Checking so there exists exactly two arguments to d.
+	// This obv. needs to be modified if more distributions are added
+	if (d.args.size() != 2) throw std::invalid_argument("[ERROR]: the args vector to distribution must have length exactly size 2");
+
+	if (d.name == "uniform") {
+		std::uniform_real_distribution<double> sampler(d.args.at(0), d.args.at(1));
+		return [sampler, &mt]()mutable{return sampler(mt);};
+	} else if (d.name == "normal") {
+		std::normal_distribution<double> sampler(d.args.at(0), d.args.at(1));
+		return [sampler, &mt]()mutable{return sampler(mt);};
+	} else if (d.name == "log-normal") {
+		std::lognormal_distribution<double> sampler(d.args.at(0), d.args.at(1));
+		return [sampler, &mt]()mutable{return sampler(mt);};
+	} else {
+		throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");
+	}
+}
+
+Eigen::Quaternion<double> random_quaternion(std::mt19937& mt) {
+	std::uniform_real_distribution<double> u(0.0, 1.0);
+	double u1 = u(mt);
+	double u2 = u(mt);
+	double u3 = u(mt);
+
+	Eigen::Quaternion<double> q(std::sqrt(1-u1) * std::sin(2 * M_PI * u2),
+								std::sqrt(1-u1) * std::cos(2 * M_PI * u2),
+								std::sqrt(u1) * std::sin(2 * M_PI * u3),
+								std::sqrt(u1) * std::cos(2 * M_PI * u3));
+
+	return q;
+}
+
+
+

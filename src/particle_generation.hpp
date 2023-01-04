@@ -2,6 +2,9 @@
 #define PARTICLE_GENERATION_H
 
 #include "superellipsoid.hpp"
+#include <eigen3/Eigen/src/Geometry/Quaternion.h>
+#include <functional>
+#include <random>
 #include <vector>
 
 struct Distribution {
@@ -40,5 +43,17 @@ Distribution parse_distribution(std::string distr_string);
 std::vector<int> expected_particles_needed(std::vector<double> expected_volume_factors, std::vector<double> target_volume_fractions);
 
 std::vector<double> expected_volumes(std::vector<ParticleDistribution> particle_distributions);
+
+/**
+ * Initialises a sampler according to `d` and returns a function that samples from that distribution.
+ *
+ * @param `d`: distribution to create sampler from.
+ * @param ´mt´: random number generator initialised with std::random_device.
+ * @return parameter free function sampling from `d`.
+ */
+std::function<double(void)> get_sampler(const Distribution& d, std::mt19937& mt);
+
+// Returns a quaternion where each rotation angle has been unifomrly sampled  over its domain
+Eigen::Quaternion<double> random_quaternion();
 
 #endif
