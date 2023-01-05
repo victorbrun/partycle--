@@ -238,3 +238,13 @@ void Domain::add_particle(Superellipsoid* p) {
 	double r = p->circumscribed_sphere_radius();
 	if (r > this->larges_circumscribing_sphere_radius) larges_circumscribing_sphere_radius = r; 
 }
+
+double Domain::volume(void) {
+	double x_len = this->x_bounds[1] - this->x_bounds[0];
+	double y_len = this->y_bounds[1] - this->y_bounds[0];
+	double z_len = this->z_bounds[1] - this->z_bounds[0];
+
+	return x_len * y_len * z_len;
+}
+
+

@@ -83,7 +83,7 @@ class Domain {
 		// Constructor with particles available
 		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, std::vector<Superellipsoid*>* particles);
 		
-		int n_particles();
+		int n_particles(void);
 		
 		// Adds `p` to the domain
 		void add_particle(Superellipsoid* p);
@@ -92,6 +92,9 @@ class Domain {
 
 		// Introduces the given particle into the domain and increments the advancing front accordingly.
 		void increment_advancing_front(Superellipsoid* p);
+
+		// Returns the volume of the domain
+		double volume(void);
 
 		void draw(int samples);
 

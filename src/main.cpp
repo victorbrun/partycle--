@@ -50,13 +50,35 @@ int main() {
 
 	std::cout << "volume: " << super_arr->at(0)->volume() << std::endl;
 	*/
-	
-	std::random_device rd;
-	std::mt19937 mt(rd());
-	
-	std::normal_distribution<double> d;
-	d = std::normal_distribution<double>(1,1);
-	std::cout << d(mt) << std::endl;
+	int n_particles = 100000;
+
+	double ref_p1_scale[3] = {1,1,1};
+	double ref_p2_scale[3] = {2,1,2};
+	double ref_p3_scale[3] = {1,2,1};
+
+	double ref_p1_shape[2] = {2,2};
+	double ref_p2_shape[2] = {2,5};
+	double ref_p3_shape[2] = {5,2};
+
+	Superellipsoid ref_p1(1, ref_p1_scale, ref_p1_shape); 
+	Superellipsoid ref_p2(2, ref_p2_scale, ref_p2_shape); 
+	Superellipsoid ref_p3(3, ref_p3_scale, ref_p3_shape); 
+
+	std::vector<double> ref_p1_vol_distr_args = {5, 7};
+	std::vector<double> ref_p2_vol_distr_args = {10, 2};
+	std::vector<double> ref_p3_vol_distr_args = {1, 0.25};
+
+	std::vector<ParticleDistribution> pd = {
+		{1, ref_p1, {"uniform", ref_p1_vol_distr_args}},
+		{2, ref_p2, {"normal", ref_p2_vol_distr_args}},
+		{3, ref_p3, {"log-normal", ref_p3_vol_distr_args}},
+	};
+	std::vector<double> target_volume_fractions = {0.2, 0.5, 0.3};
+
+	// Generates random particles and saves them on the heap
+	std::vector<Superellipsoid*>* particles = generate_random_particles(pd, 
+																		target_volume_fractions,
+																		n_particles);	
 
 	return 0;
 }
