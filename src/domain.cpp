@@ -200,7 +200,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->x_bounds[1] = x_range[1];
 	this->y_bounds[0] = y_range[0];
 	this->y_bounds[1] = y_range[1];
-	this->z_bounds[0] = z_range[1];
+	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
 	this->particles = CoordinateIndexer();
@@ -212,7 +212,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->x_bounds[1] = x_range[1];
 	this->y_bounds[0] = y_range[0];
 	this->y_bounds[1] = y_range[1];
-	this->z_bounds[0] = z_range[1];
+	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
 	this->particles = CoordinateIndexer(n_particles);
@@ -224,7 +224,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->x_bounds[1] = x_range[1];
 	this->y_bounds[0] = y_range[0];
 	this->y_bounds[1] = y_range[1];
-	this->z_bounds[0] = z_range[1];
+	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
 	this->particles = CoordinateIndexer(particles);

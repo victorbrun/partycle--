@@ -23,10 +23,9 @@ struct ParticleDistribution {
 	Distribution volume_distribution;
 };
 
-std::vector<Superellipsoid*>* generate_random_particles(std::vector<ParticleDistribution> particle_distributions, 
-														std::vector<double> volume_fractions, 
-														double domain_volume,
-														int n_particles); 
+std::vector<Superellipsoid*>* generate_random_particles(const std::vector<ParticleDistribution>& particle_distributions, 
+														const std::vector<double>& volume_fractions, 
+														double domain_volume); 
 
 Distribution parse_distribution(std::string distr_string);
 
@@ -41,8 +40,8 @@ Distribution parse_distribution(std::string distr_string);
  * @param `domain_volume`: volume of domain in which the particles will be places.
  * @return the expected number of needed particle for each class to achive the target volume fractions
  */
-std::vector<int> expected_particles_needed(std::vector<ParticleDistribution> particle_distributions, 
-										   std::vector<double> target_volume_fractions,
+std::vector<int> expected_particles_needed(const std::vector<ParticleDistribution>& particle_distributions, 
+										   const std::vector<double>& target_volume_fractions,
 										   double domain_volume);
 
 /**

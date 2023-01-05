@@ -83,6 +83,12 @@ class Domain {
 		// Constructor with particles available
 		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, std::vector<Superellipsoid*>* particles);
 		
+		/** 
+		 * Reserves space for n_particles. Ought to be used when you need domain
+		 * volume in order to compute the number of particles if will be filled with.
+		 */
+		void reserve_particle_space(int n_particles);
+
 		int n_particles(void);
 		
 		// Adds `p` to the domain

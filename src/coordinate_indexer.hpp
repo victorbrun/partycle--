@@ -57,6 +57,13 @@ class CoordinateIndexer {
 		// Constructor for when number of particles are known.
 		CoordinateIndexer(int n_particles);
 
+		/**
+		 * Reserves space for `n_particles` in the `particles` vector.
+		 * This ought to be used when you can only know the number of particles 
+		 * to put in CoordinateIndexer after you have initialised it.
+		 */
+		void reserve_particle_space(int n_particles);
+
 		// Frees all the memory allocated on the heap
 		void destroy();
 

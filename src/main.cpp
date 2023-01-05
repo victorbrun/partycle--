@@ -1,6 +1,7 @@
 #include "particle_generation.hpp"
 #include "superellipsoid.hpp" 
 #include "coordinate_indexer.hpp" 
+#include "domain.hpp"
 #include <eigen3/Eigen/src/Core/Matrix.h>
 #include <eigen3/Eigen/src/Geometry/Quaternion.h>
 #include <iostream>
@@ -50,7 +51,6 @@ int main() {
 
 	std::cout << "volume: " << super_arr->at(0)->volume() << std::endl;
 	*/
-	int n_particles = 100000;
 
 	double ref_p1_scale[3] = {1,1,1};
 	double ref_p2_scale[3] = {2,1,2};
@@ -75,10 +75,19 @@ int main() {
 	};
 	std::vector<double> target_volume_fractions = {0.2, 0.5, 0.3};
 
+	double x_range[2] = {0,100};
+	double y_range[2] = {0,100};
+	double z_range[2] = {0,100};
+	double domain_vol = (x_range[1]-x_range[0])*(y_range[1]-y_range[0])*(z_range[1]-z_range[0]); 
+	std::vector<int> exp_n_particles = expected_particles_needed(pd, target_volume_fractions, domain_vol);
+	int n_particles = std::accumulate(exp_n_particles.begin(), exp_n_particles.end(), 0);
+	Domain d = Domain(x_range, y_range, z_range, n_particles);
+	
 	// Generates random particles and saves them on the heap
+	std::cout << "Generating " << n_particles << " random particles of " << pd.size() << " different classes." << std::endl;
 	std::vector<Superellipsoid*>* particles = generate_random_particles(pd, 
 																		target_volume_fractions,
-																		n_particles);	
+																		domain_vol);	
 
 	return 0;
 }
