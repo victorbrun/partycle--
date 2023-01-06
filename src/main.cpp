@@ -3,6 +3,7 @@
 #include "coordinate_indexer.hpp" 
 #include "domain.hpp"
 #include <eigen3/Eigen/src/Core/Matrix.h>
+#include <eigen3/Eigen/src/Core/util/Constants.h>
 #include <eigen3/Eigen/src/Geometry/Quaternion.h>
 #include <iostream>
 #include <random>
@@ -75,19 +76,86 @@ int main() {
 	};
 	std::vector<double> target_volume_fractions = {0.2, 0.5, 0.3};
 
-	double x_range[2] = {0,100};
-	double y_range[2] = {0,100};
-	double z_range[2] = {0,100};
+	double x_range[2] = {0,50};
+	double y_range[2] = {0,50};
+	double z_range[2] = {0,50};
 	double domain_vol = (x_range[1]-x_range[0])*(y_range[1]-y_range[0])*(z_range[1]-z_range[0]); 
 	std::vector<int> exp_n_particles = expected_particles_needed(pd, target_volume_fractions, domain_vol);
 	int n_particles = std::accumulate(exp_n_particles.begin(), exp_n_particles.end(), 0);
 	Domain d = Domain(x_range, y_range, z_range, n_particles);
 	
 	// Generates random particles and saves them on the heap
-	std::cout << "Generating " << n_particles << " random particles of " << pd.size() << " different classes." << std::endl;
-	std::vector<Superellipsoid*>* particles = generate_random_particles(pd, 
-																		target_volume_fractions,
-																		domain_vol);	
+	size_t runs = 50;
+	Eigen::ArrayXXd samples = Eigen::ArrayXXd::Zero(3, runs);
+	std::cout << "Generating " << n_particles << " random particles of " << pd.size() << " different classes " << runs << " times." <<std::endl;
+	for (size_t jx = 0; jx < runs; jx++) {		
+		std::vector<Superellipsoid*>* particles = generate_random_particles_seq(pd, target_volume_fractions, domain_vol);
+		for (size_t ix = 0; ix < particles->size(); ix++) {
+			Superellipsoid* p = particles->at(ix);
+			samples(p->get_class()-1, jx) += p->volume();
+			//std::cout << "samples(" << p->get_class()-1 << "," << jx << ") = " << samples(p->get_class()-1, jx) << std::endl;
+		}
+		delete particles;
+	}
+
+	// Computes average volume over above runns
+	long double average_vol_arr[3] = {0, 0, 0};
+	for (size_t ix = 0; ix < runs; ix++) {
+		average_vol_arr[0] += samples(0, ix)/runs;
+		average_vol_arr[1] += samples(1, ix)/runs;
+		average_vol_arr[2] += samples(2, ix)/runs;
+
+		//std::cout << average_vol_arr[0] << " " << average_vol_arr[1] << " " << average_vol_arr[2] << std::endl;
+	}
+	
+
+	
+	long double vol_sum = average_vol_arr[0] + average_vol_arr[1] + average_vol_arr[2];
+	std::cout << " ---------- SEQUENTIALLY GENERATED PARTICLES -------------" << std::endl;
+	std::cout << "[INFO]: Target volume fractions: class 1: " << target_volume_fractions.at(0) << " class 2: " << target_volume_fractions.at(1) << " class 3: " << target_volume_fractions.at(2) << std::endl;  
+	std::cout << "[INFO]: Actual volume fractions: class 1: " << average_vol_arr[0]/vol_sum << " class 2: " << average_vol_arr[1]/vol_sum << " class 3: " << average_vol_arr[2]/vol_sum << std::endl;  
+	std::cout << "\n";	
+
+	/* Doing random class selection to generate particles */
+
+	// Generates random particles and saves them on the heap
+	runs = 50;
+	Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> samples2;
+	samples2.resize(3, runs);
+	for (size_t ix = 0; ix < 3; ix++) {
+		for (size_t jx = 0; jx < runs; jx++) {
+			samples2(ix,jx) = 0;
+		}
+	}
+
+
+	std::cout << "Generating " << n_particles << " random particles of " << pd.size() << " different classes " << runs << " times." <<std::endl;
+	for (size_t jx = 0; jx < runs; jx++) {		
+		std::vector<Superellipsoid*>* particles = generate_random_particles_rnd(pd, target_volume_fractions, (size_t)n_particles);
+		for (size_t ix = 0; ix < particles->size(); ix++) {
+			Superellipsoid* p = particles->at(ix);
+			samples2(p->get_class()-1, jx) += p->volume();
+			//std::cout << "samples2(" << p->get_class()-1 << "," << jx << ") = " << samples2(p->get_class()-1, jx) << std::endl;
+		}
+		delete particles;
+	}
+
+	// Computes average volume over above runns
+	average_vol_arr[0] = 0;
+	average_vol_arr[1] = 1;
+	average_vol_arr[2] = 2;
+	for (size_t ix = 0; ix < runs; ix++) {
+		average_vol_arr[0] += samples2(0, ix)/runs;
+		average_vol_arr[1] += samples2(1, ix)/runs;
+		average_vol_arr[2] += samples2(2, ix)/runs;
+
+		//std::cout << average_vol_arr[0] << " " << average_vol_arr[1] << " " << average_vol_arr[2] << std::endl;
+	}
+
+	vol_sum = average_vol_arr[0] + average_vol_arr[1] + average_vol_arr[2];
+	std::cout << " ---------- RANDOMLY GENERATED PARTICLES -------------" << std::endl;
+	std::cout << "[INFO]: Target volume fractions: class 1: " << target_volume_fractions.at(0) << " class 2: " << target_volume_fractions.at(1) << " class 3: " << target_volume_fractions.at(2) << std::endl;  
+	std::cout << "[INFO]: Actual volume fractions: class 1: " << average_vol_arr[0]/vol_sum << " class 2: " << average_vol_arr[1]/vol_sum << " class 3: " << average_vol_arr[2]/vol_sum << std::endl;  
 
 	return 0;
 }

@@ -23,9 +23,13 @@ struct ParticleDistribution {
 	Distribution volume_distribution;
 };
 
-std::vector<Superellipsoid*>* generate_random_particles(const std::vector<ParticleDistribution>& particle_distributions, 
+std::vector<Superellipsoid*>* generate_random_particles_seq(const std::vector<ParticleDistribution>& particle_distributions, 
 														const std::vector<double>& volume_fractions, 
 														double domain_volume); 
+
+std::vector<Superellipsoid*>* generate_random_particles_rnd(const std::vector<ParticleDistribution>& particle_distributions, 
+														const std::vector<double>& volume_fractions, 
+														const size_t n_particles); 
 
 Distribution parse_distribution(std::string distr_string);
 
