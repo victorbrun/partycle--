@@ -193,5 +193,220 @@ void Superellipsoid::scale_to_volume(double vol) {
 	this->set_scale("b", b*scale_factor);
 	this->set_scale("c", c*scale_factor);
 }
+Eigen::Vector2d Superellipsoid::constraints(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector4d& Z) {
 
+	Eigen::Vector3d X = Z[seq(0,2)];
+	//Coordinates in local frames
+
+    Eigen::Vector3d x = Rx.transpose() * (X-cx)
+    Eigen::Vector3d y = Ry.transpose() * (X-cy)
+
+	// Particle parameters
+	Eigen::Vector3d ax = p1->scale
+	Eigen::Vector3d ay = p2->scale
+	Eigen::Vector2d ex = p1->shape
+	Eigen::Vector2d ey = p2->shape
+	
+	Eigen::Vector2d H;
+	H[0] = std::pow(std::pow(std::abs(x[0]/ax[0]), ex[1]) + std::pow(std::abs(x[1]/ax[1]), ex[1]), ex[0]/ex[1]) + std::pow(std::abs(x[2]/ax[2]), ex[0]) - 1
+    H[1] = std::pow(std::pow(std::abs(y[0]/ay[0]), ey[1]) + std::pow(std::abs(y[1]/ay[1]), ey[1]), ey[0]/ey[1]) + std::pow(std::abs(y[2]/ay[2]), ey[0]) - 1
+    
+	return H
+}
+Eigen::Matrix4d Superellipsoid::J_matrix(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector4d& Z) {
+	
+	// Input :
+	// 			Z : [X, mu]
+	//			X : 3d global coordinates
+	//			mu: double 
+
+	Eigen::Vector3d X = Z[seq(0,2)];
+	double mu = Z[3]
+
+	// Particle parameters
+	Eigen::Vector3d ax = p1->scale
+	Eigen::Vector3d ay = p2->scale
+	Eigen::Vector2d ex = p1->shape
+	Eigen::Vector2d ey = p2->shape
+	Eigen::Matrix3d Rx = p1->get_orientation().toRotationMatrix();
+	Eigen::Matrix3d Ry = p2->get_orientation().toRotationMatrix();
+	Eigen::Vector3d cx = p1.get_center()
+	Eigen::Vector3d cy = p2.get_center()
+
+	//Coordinates in local frames
+    Eigen::Vector3d x = Rx.transpose() * (X-cx)
+    Eigen::Vector3d y = Ry.transpose() * (X-cy)
+
+	// Temporary variables
+    double vx = std::pow(std::abs(x[0]/ax[0]), ex[1]) + std::pow(std::abs(x[1]/ax[1]), ex[1])
+    double vy = std::pow(std::abs(y[0]/ay[0]), ey[1]) + std::pow(std::abs(y[1]/ay[1]), ey[1])
+    double k1 = ex[0]/ex[1]-1
+    double k2 = ey[0]/ey[1]-1
+
+    // Local first derivatives
+    double f1x = ex[0]/ax[0] * std::pow(std::abs(x[0]/ax[0]), (ex[1]-1)) * std::pow(vx, k1) * sgn(x[0])
+    double f1y = ex[0]/ax[1] * std::pow(std::abs(x[1]/ax[1]), (ex[1]-1)) * std::pow(vx, k1) * sgn(x[1])        
+    double f1z = ex[0]/ax[2] * std::pow(std::abs(x[2]/ax[2]), (ex[0]-1)) * sgn(x[2])
+
+	double f2x = ey[0]/ay[0] * std::pow(std::abs(y[0]/ay[0]), (ey[1]-1)) * std::pow(vy, k2) * sgn(y[0])
+    double f2y = ey[0]/ay[1] * std::pow(std::abs(y[1]/ay[1]), (ey[1]-1)) * std::pow(vy, k2) * sgn(y[1])        
+    double f2z = ey[0]/ay[2] * std::pow(std::abs(y[2]/ay[2]), (ey[0]-1)) * sgn(y[2])
+
+	// Local gradients
+    Eigen::Vector3d f1g = << f1x, f1y, f1z; 
+    Eigen::Vector3d f2g = << f2x, f2y, f2z; 
+
+    // Global gradients
+    Eigen::Vector3d F1g = Rx * f1g
+    Eigen::Vector3d F2g = Ry * f2g
+
+    // Constraint hessians
+    Eigen::Matrix 3d h1 = p1.inside_outside_hess(x)
+    Eigen::Matrix 3d h2 = p2.inside_outside_hess(x)
+
+    Eigen::Matrix4d H1 = Rx * h1 * Rx.transpose()
+    Eigen::Matrix4d H2 = Ry * h2 * Ry.transpose()
+
+
+    // Construct J
+	Eigen::Matrix4d J;
+
+    J[seq(0,2), seq(0,2)] = H1 + std::pow(mu, 2) * H2
+    J[3       , seq(0,2)] = F1g-F2g
+    J[seq(0,2),        3] = 2*mu*F2g
+
+    return J
+}
+Eigen::Vector3d Superellipsoid::phi(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector4d& Z) {
+
+	// Input :	Z : [X, mu]
+	//			X : 3d global coordinates
+	//			mu: double 
+
+	Eigen::Vector3d X = Z[seq(0,2)];
+	double mu = Z[3]
+
+	// Particle parameters
+	Eigen::Vector3d ax = p1->scale
+	Eigen::Vector3d ay = p2->scale
+	Eigen::Vector2d ex = p1->shape
+	Eigen::Vector2d ey = p2->shape
+	Eigen::Matrix3d Rx = p1->get_orientation().toRotationMatrix();
+	Eigen::Matrix3d Ry = p2->get_orientation().toRotationMatrix();
+	Eigen::Vector3d cx = p1.get_center()
+	Eigen::Vector3d cy = p2.get_center()
+
+	//Coordinates in local frames
+    Eigen::Vector3d x = Rx.transpose() * (X-cx)
+    Eigen::Vector3d y = Ry.transpose() * (X-cy)
+
+	// Temporary variables
+    double vx = std::pow(std::abs(x[0]/ax[0]), ex[1]) + std::pow(std::abs(x[1]/ax[1]), ex[1])
+    double vy = std::pow(std::abs(y[0]/ay[0]), ey[1]) + std::pow(std::abs(y[1]/ay[1]), ey[1])
+    double k1 = ex[0]/ex[1]-1
+    double k2 = ey[0]/ey[1]-1
+ 	
+    // Local first derivatives
+    double f1x = ex[0]/ax[0] * std::pow(std::abs(x[0]/ax[0]), (ex[1]-1)) * std::pow(vx, k1) * sgn(x[0])
+    double f1y = ex[0]/ax[1] * std::pow(std::abs(x[1]/ax[1]), (ex[1]-1)) * std::pow(vx, k1) * sgn(x[1])        
+    double f1z = ex[0]/ax[2] * std::pow(std::abs(x[2]/ax[2]), (ex[0]-1)) * sgn(x[2])
+
+	double f2x = ey[0]/ay[0] * std::pow(std::abs(y[0]/ay[0]), (ey[1]-1)) * std::pow(vy, k2) * sgn(y[0])
+    double f2y = ey[0]/ay[1] * std::pow(std::abs(y[1]/ay[1]), (ey[1]-1)) * std::pow(vy, k2) * sgn(y[1])        
+    double f2z = ey[0]/ay[2] * std::pow(std::abs(y[2]/ay[2]), (ey[0]-1)) * sgn(y[2])
+
+	// Local gradients
+    Eigen::Vector3d f1g = << f1x, f1y, f1z; 
+    Eigen::Vector3d f2g = << f2x, f2y, f2z; 
+
+    // Global gradients
+    Eigen::Vector3d F1g = Rx * f1g
+    Eigen::Vector3d F2g = Ry * f2g
+	
+    double F1 = std::pow(std::pow(std::abs(x[0]/ax[0]), ex[1]) + std::pow(std::abs(x[1]/ax[1]), ex[1]), ex[0]/ex[1]) + std::pow(std::abs(x[2]/ax[2]), ex[0]) - 1
+    double F2 = std::pow(std::pow(std::abs(y[0]/ay[0]), ey[1]) + std::pow(std::abs(y[1]/ay[1]), ey[1]), ey[0]/ey[1]) + std::pow(std::abs(y[2]/ay[2]), ey[0]) - 1
+    
+	// Construct Phi
+	Eigen::Vector4d phi;
+    phi[seq(0,2)] = F1g + mu**2*F2g
+    phi[3] = F1 - F2 
+
+	return phi
+}
+
+static bool Superellipsoid::distance(Superellipsoid* p1, Superellipsoid* p2){
+	// Parameters
+	int N = 4;
+	int K = 8;
+	double eps = 1e-1;
+
+	Eigen::Vector3d ax = p1->scale
+	Eigen::Vector3d ay = p2->scale
+	Eigen::Vector2d ex = p1->shape
+	Eigen::Vector2d ey = p2->shape
+
+	Eigen::Vector3d c1 = p1->c
+	Eigen::Vector3d c2 = p2->c
+
+	double rx = ax.min()
+	double ry = ay.min()
+
+	// Initial and step of shape and scale parameters
+	Eigen::Vector3d dax = (ax-rx)/N
+	Eigen::Vector3d day = (ay-ry)/N
+	Eigen::Vector2d dex = (ex-2)/N
+	Eigen::Vector2d dey = (ey-2)/N
+	Eigen::Vector3d ax0 {rx, rx, rx}
+	Eigen::Vector3d ay0 {ry, ry, ry}
+	Eigen::Vector2d ex0 {2, 2}
+	Eigen::Vector2d ey0 {2, 2}
+
+	// Initialize coordinates to x0, 1
+	Eigen::Vector3d Z {(c1[0]+c2[0])/2, (c1[1]+c2[1])/2, (c1[2]+c2[2])/2, 1}
+	for (int i = 0; i < N; i++) {
+		// Increment shape and scale parameters
+		Eigen::Vector2d exi = ex0 + i * dex 
+		Eigen::Vector2d eyi = ey0 + i * dey
+        Eigen::Vector3d axi = ax0 + i * dax
+		Eigen::Vector3d ayi = ay0 + i * day
+		
+		for (int j = 0;  j< K; j++) {
+			// For select shape and scale parameters, iterate solution
+
+			// Collect phi and J
+			Eigen::Vector4d phi = Superellipsoid::phi(p1, p2, Z)
+            Eigen::Matrix4d J   = Superellipsoid::J(p1, p2, Z)
+
+			// Solve equation system : 
+			// TODO: Test different solvers for speed
+			Eigen::Vector3d dZ = J.colPivHouseholderQr().solve(-phi);
+			double pNo = phi.norm()
+			double alpha = 1
+			while (true){
+				pNi = Superellipsoid::phi(p1, p2, Z+alpha*dZ).norm()
+				if (pNi<pNo) {
+					// If we're closer to a solution; accept step size
+					double d = alpha*dZ.norm()
+					Z = Z+alpha*dZ
+					break;
+
+				} else {
+					alpha = alpha/2
+
+				}
+			if(d<eps) {
+				break;
+			}
+			}
+		}
+	
+	}
+    b = false
+	h = Superellipsoid::constraints(p1, p2, Z)
+    if h[0]<0 && h[1]<0:
+        // Collision
+        b = True
+    return b
+
+}
 
