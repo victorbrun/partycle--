@@ -19,7 +19,6 @@ class Superellipsoid {
 
 		static Eigen::Vector2d constraints(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector4d& Z);
 
-
 		static Eigen::Matrix4d J_matrix(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector4d& Z);
 
 		static Eigen::Vector3d phi_vec(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector4d& Z);
@@ -103,7 +102,7 @@ class Superellipsoid {
 		 * Returns bool indicating if computation succeeded and minimum 
 		 * distance between `p1` and `p2`.
 		 */		
-		static bool cc(Superellipsoid* p1, Superellipsoid* p2);
+		static bool distance(Superellipsoid* p1, Superellipsoid* p2);
 
 		// Re-scales particle to have the volume specified by `vol`.
 		void scale_to_volume(double vol);
