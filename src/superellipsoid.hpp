@@ -17,9 +17,12 @@ class Superellipsoid {
 		// Changes the scale parameter of Superellipsoid to `val`
 		void set_scale(std::string param_name, double val);
 
-		static Eigen::Matrix4d J_matrix(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector3d& x);
+		static Eigen::Vector2d constraints(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector4d& Z);
 
-		static Eigen::Vector3d phi_vec(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector3d& x);
+
+		static Eigen::Matrix4d J_matrix(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector4d& Z);
+
+		static Eigen::Vector3d phi_vec(const Superellipsoid& p1, const Superellipsoid& p2, const Eigen::Vector4d& Z);
 
 	public:
 		Superellipsoid(int cls, double scale_params[3], double shape_params[2]);
