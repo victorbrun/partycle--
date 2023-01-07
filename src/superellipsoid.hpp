@@ -17,11 +17,11 @@ class Superellipsoid {
 		// Changes the scale parameter of Superellipsoid to `val`
 		void set_scale(std::string param_name, double val);
 
-		static Eigen::Vector2d constraints(Superellipsoid& p1, Superellipsoid& p2, Eigen::Vector4d& Z);
+		static Eigen::Vector2d constraints(Superellipsoid& p1, Superellipsoid& p2, Eigen::Vector4d& Z, double ax[3], double ay[3], double ex[2], double ey[2]);
 
-		static Eigen::Matrix4d J_matrix(Superellipsoid& p1, Superellipsoid& p2, Eigen::Vector4d& Z);
+		static Eigen::Matrix4d J_matrix(Superellipsoid& p1, Superellipsoid& p2, Eigen::Vector4d& Z, double ax[3], double ay[3], double ex[2], double ey[2]);
 
-		static Eigen::Vector3d phi(Superellipsoid& p1, Superellipsoid& p2, Eigen::Vector4d& Z);
+		static Eigen::Vector4d phi(Superellipsoid& p1, Superellipsoid& p2, Eigen::Vector4d& Z, double ax[3], double ay[3], double ex[2], double ey[2]);
 
 	public:
 		Superellipsoid(int cls, double scale_params[3], double shape_params[2]);
@@ -102,7 +102,7 @@ class Superellipsoid {
 		 * Returns bool indicating if computation succeeded and minimum 
 		 * distance between `p1` and `p2`.
 		 */		
-		static bool distance(Superellipsoid& p1, Superellipsoid& p2);
+		bool distance(Superellipsoid& p1, Superellipsoid& p2);
 
 		// Re-scales particle to have the volume specified by `vol`.
 		void scale_to_volume(double vol);
