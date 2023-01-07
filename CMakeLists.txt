@@ -39,6 +39,9 @@ endif()
 set(SOURCES 
 	src/main.cpp 
 
+	src/program_options.cpp
+	src/program_options.hpp
+
 	src/superellipsoid.cpp  
 	src/superellipsoid.hpp 
 		
