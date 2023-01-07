@@ -13,9 +13,9 @@
 #include <stdexcept>
 #include <random>
 
-std::vector<Superellipsoid*>* generate_random_particles_seq(const std::vector<ParticleDistribution>& particle_distributions, 
+std::vector<Superellipsoid*>* generate_random_particles(const std::vector<ParticleDistribution>& particle_distributions, 
 														const std::vector<double>& volume_fractions,
-														double domain_volume) 
+														const double domain_volume) 
 {
 	if ( particle_distributions.size() != volume_fractions.size() ) {
 		throw std::invalid_argument("[ERROR]: size of particle_distributions does not equal size of volume_fractions.");
@@ -23,9 +23,9 @@ std::vector<Superellipsoid*>* generate_random_particles_seq(const std::vector<Pa
 
 	// Checks that each particle distribution has unique cls value since having two
 	// distribution for the same class of particle is not well defined.
-	for (int ix = 0; ix < particle_distributions.size(); ix++) {
+	for (size_t ix = 0; ix < particle_distributions.size(); ix++) {
 		int cls1 = particle_distributions.at(ix).cls;
-		for (int jx = ix+1; jx < particle_distributions.size(); jx++) {
+		for (size_t jx = ix+1; jx < particle_distributions.size(); jx++) {
 			int cls2 = particle_distributions.at(jx).cls;
 			if ( cls1 == cls2 ) {
 				throw std::invalid_argument("[ERROR]: each ParticleDistribution must have a unique cls value.");
@@ -55,63 +55,13 @@ std::vector<Superellipsoid*>* generate_random_particles_seq(const std::vector<Pa
 		double shape_params[2] = {p.get_shape("n1"), p.get_shape("n2")};
 		
 		// Genereates new particles with random volume and rotation
-		for (size_t jx = 0; jx < exp_n_particles.at(ix); jx++) {
+		for (size_t jx = 0; jx < (size_t)exp_n_particles.at(ix); jx++) {
 			Superellipsoid* new_p = new Superellipsoid(cls, scale_params, shape_params);
 			new_p->set_orientation(random_quaternion(mt));
 			new_p->scale_to_volume(volume_sampler());
 			particles->at(kx) = new_p;
 			kx++;
 		}
-	}
-
-	return particles;
-}
-
-std::vector<Superellipsoid*>* generate_random_particles_rnd(const std::vector<ParticleDistribution>& particle_distributions, 
-														const std::vector<double>& volume_fractions,
-														const size_t n_particles) 
-{
-	if ( particle_distributions.size() != volume_fractions.size() ) {
-		throw std::invalid_argument("[ERROR]: size of particle_distributions does not equal size of volume_fractions.");
-	}
-
-	// Checks that each particle distribution has unique cls value since having two
-	// distribution for the same class of particle is not well defined.
-	for (int ix = 0; ix < particle_distributions.size(); ix++) {
-		int cls1 = particle_distributions.at(ix).cls;
-		for (int jx = ix+1; jx < particle_distributions.size(); jx++) {
-			int cls2 = particle_distributions.at(jx).cls;
-			if ( cls1 == cls2 ) {
-				throw std::invalid_argument("[ERROR]: each ParticleDistribution must have a unique cls value.");
-			}
-		}
-	}
-	// Allocates vector on heap to store particles 
-	std::vector<Superellipsoid*>* particles = new std::vector<Superellipsoid*>(n_particles);
-
-	// Initialises random number generator.
-	std::random_device rd;
-	std::mt19937 mt(rd());
-
-	std::vector<double> p = particle_class_selection_prob(particle_distributions, volume_fractions);
-	std::discrete_distribution<size_t> d(p.begin(), p.end());
-	
-	for (size_t ix = 0; ix < n_particles; ix++) {
-		// Randomly selects particle class and related volume distribution 
-		ParticleDistribution pd = particle_distributions.at(d(mt));
-		std::function<double(void)> volume_sampler = get_sampler(pd.volume_distribution, mt);
-
-		// Extracts reference particle parameters
-		Superellipsoid p = pd.reference_particle;
-		int cls = p.get_class();
-		double scale_params[3] = {p.get_scale("a"), p.get_scale("b"), p.get_scale("c")};
-		double shape_params[2] = {p.get_shape("n1"), p.get_shape("n2")};
-	
-		// Generates the new particle and adds it to particles vector 
-		Superellipsoid* new_p = new Superellipsoid(cls, scale_params, shape_params);
-		new_p->set_orientation(random_quaternion(mt));
-		new_p->scale_to_volume(volume_sampler());
-		particles->at(ix) = new_p;
 	}
 
 	return particles;
@@ -127,9 +77,14 @@ Distribution parse_distribution(std::string distr_string) {
 		int comma_idx = param_string.find(",");
 		double lower_bound = std::stod(param_string.substr(0, comma_idx));
 		double upper_bound = std::stod(param_string.substr(comma_idx + 1));
-		
+
+		// Making sure distribution arguments make sense
+		if (lower_bound > upper_bound) {
+			throw std::invalid_argument("[ERROR]: first argument must be smaller than second argument in uniform distribution.");
+		}
+
 		param_vec.push_back(lower_bound);
-		param_vec.push_back(lower_bound);
+		param_vec.push_back(upper_bound);
 
 	} else if (distr_name == "normal") {
 		int comma_idx = param_string.find(",");
@@ -172,17 +127,16 @@ std::vector<int> expected_particles_needed(const std::vector<ParticleDistributio
 }
 
 std::vector<double> particle_class_selection_prob(const std::vector<ParticleDistribution>& particle_distributions,
-												  const std::vector<double>& target_volume_fractions) {
+												  const std::vector<double>& target_volume_fractions,
+												  const double domain_volume,
+												  const size_t n_particles) {
 	std::vector<double> p(particle_distributions.size());
 	
-	double mean_sum = 0;
 	for (size_t ix = 0; ix < p.size(); ix++) {
-		mean_sum += mean(particle_distributions.at(ix).volume_distribution);
-	}
+		double f = target_volume_fractions.at(ix);
+		Distribution vol_d = particle_distributions.at(ix).volume_distribution;
 
-	for (size_t ix = 0; ix < p.size(); ix++) {
-		double mu = mean(particle_distributions.at(ix).volume_distribution);
-		p.at(ix) = mu/mean_sum; 
+		p.at(ix) = domain_volume * f /(n_particles * mean(vol_d));
 	}
 
 	return p;
@@ -192,7 +146,7 @@ double mean(const Distribution& d) {
 	if (d.name == "uniform") {
 		double lb = d.args.at(0); 
 		double ub = d.args.at(1);
-		return (ub - lb)/2;
+		return (lb + ub)/2;
 	} else if (d.name == "normal") {
 		return d.args.at(0); // mu is at first index in vector
 	} else if (d.name == "log-normal") {

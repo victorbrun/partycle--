@@ -23,13 +23,23 @@ struct ParticleDistribution {
 	Distribution volume_distribution;
 };
 
-std::vector<Superellipsoid*>* generate_random_particles_seq(const std::vector<ParticleDistribution>& particle_distributions, 
+/**
+ * Generates enough random particles from `particle_distributions` such that 
+ * their total volume is, on average, the same as domain volume. Furthermore, the fraction 
+ * of the total volume of the particles, which is occupied by each particle class in 
+ * `particle_distributions` is, on average, given by `volume_fractions`.
+ *
+ * Note that the generated particles have no initialised center, since this is assumed to 
+ * to be set by the advanving front algoritm.
+ *
+ * @param `particle_distributions`: vector specifying volume distribution and particle shape for each particle class.
+ * @param `volume_fractions`: the volume fraction for each particle class in `particle_distributions`
+ * 							  which is on average achived. This vector is index aligned with `particle_distributions`.
+ * @param `domain_volume`: the volume of the domain in which the generated particles is to be placed.
+ */
+std::vector<Superellipsoid*>* generate_random_particles(const std::vector<ParticleDistribution>& particle_distributions, 
 														const std::vector<double>& volume_fractions, 
-														double domain_volume); 
-
-std::vector<Superellipsoid*>* generate_random_particles_rnd(const std::vector<ParticleDistribution>& particle_distributions, 
-														const std::vector<double>& volume_fractions, 
-														const size_t n_particles); 
+														const double domain_volume); 
 
 Distribution parse_distribution(std::string distr_string);
 
@@ -46,7 +56,7 @@ Distribution parse_distribution(std::string distr_string);
  */
 std::vector<int> expected_particles_needed(const std::vector<ParticleDistribution>& particle_distributions, 
 										   const std::vector<double>& target_volume_fractions,
-										   double domain_volume);
+										   const double domain_volume);
 
 /**
  * Computes the probability with which to draw particle classes from `particle_distributions`
@@ -56,10 +66,13 @@ std::vector<int> expected_particles_needed(const std::vector<ParticleDistributio
  * @param `particle_distributions`: vector of distributions for the different particle classes.
  * @param `target_volume_fractions`: the target volume fraction for each particles class sought to achieve.
  * 									 Index aligned with `particle_distributions`.
+ * @param `domain_volume`: volume of the domain in which the particles are to be placed.
  * @return vector of probabilities with which to select entries in `particle_distributions`to achieve `target_volume_fractions`.
  */
 std::vector<double> particle_class_selection_prob(const std::vector<ParticleDistribution>& particle_distributions,
-												  const std::vector<double>& target_volume_fractions);
+												  const std::vector<double>& target_volume_fractions,
+												  const double domain_volume,
+												  const size_t n_particles);
 
 // Computes the analytical mean (expected value) of a random variable dsitributed according to `d`.
 double mean(const Distribution& d);
