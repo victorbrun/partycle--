@@ -1,5 +1,5 @@
-#include "coordinate_indexer.h"
-#include "superellipsoid.h"
+#include "coordinate_indexer.hpp"
+#include "superellipsoid.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <eigen3/Eigen/src/Core/Matrix.h>

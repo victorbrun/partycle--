@@ -14,6 +14,9 @@ class Superellipsoid {
 
 		Eigen::Vector3d to_local_coords(Eigen::Vector3d x);
 
+		// Changes the scale parameter of Superellipsoid to `val`
+		void set_scale(std::string param_name, double val);
+
 	public:
 		Superellipsoid(int cls, double scale_params[3], double shape_params[2]);
 
@@ -47,6 +50,9 @@ class Superellipsoid {
 
 		// Sets the orientation of the Superellipsoid
 		void set_orientation(Eigen::Quaternion<double> q);
+	
+		// Computes the volume for the current Superellipsoid
+		double volume();
 	
 		/*
 		 * Computes the value of left hand side of below implicit function, which defines the Superellipsoid surface:
@@ -91,6 +97,9 @@ class Superellipsoid {
 		 * distance between `p1` and `p2`.
 		 */		
 		static std::tuple<bool, double> distance(Superellipsoid* p1, Superellipsoid* p2);
+
+		// Re-scales particle to have the volume specified by `vol`.
+		void scale_to_volume(double vol);
 };
 
 #endif

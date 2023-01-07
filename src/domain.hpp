@@ -1,8 +1,8 @@
 #ifndef DOMAIN_H
 #define DOMAIN_H
 
-#include "superellipsoid.h"
-#include "coordinate_indexer.h"
+#include "superellipsoid.hpp"
+#include "coordinate_indexer.hpp"
 #include <eigen3/Eigen/Sparse>
 #include <vector>
 
@@ -83,7 +83,13 @@ class Domain {
 		// Constructor with particles available
 		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, std::vector<Superellipsoid*>* particles);
 		
-		int n_particles();
+		/** 
+		 * Reserves space for n_particles. Ought to be used when you need domain
+		 * volume in order to compute the number of particles if will be filled with.
+		 */
+		void reserve_particle_space(int n_particles);
+
+		int n_particles(void);
 		
 		// Adds `p` to the domain
 		void add_particle(Superellipsoid* p);
@@ -92,6 +98,9 @@ class Domain {
 
 		// Introduces the given particle into the domain and increments the advancing front accordingly.
 		void increment_advancing_front(Superellipsoid* p);
+
+		// Returns the volume of the domain
+		double volume(void);
 
 		void draw(int samples);
 

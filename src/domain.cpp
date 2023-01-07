@@ -1,5 +1,5 @@
-#include "domain.h"
-#include "superellipsoid.h"
+#include "domain.hpp"
+#include "superellipsoid.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -17,6 +17,7 @@
  * 		   is the minimum distance between two points, one on each
  * 		   superellipsoid.
  */
+/*
 std::tuple<bool, double> check_collision(Superellipsoid* p1, Superellipsoid* p2) {
 	Eigen::Vector3d c1 = p1->get_center();
 	Eigen::Vector3d c2 = p2->get_center();
@@ -46,7 +47,7 @@ std::tuple<bool, double> check_collision(Superellipsoid* p1, Superellipsoid* p2)
 	}
 	return ret;
 }
-
+*/
 /***** Private *****/
 
 void Domain::remove_particle_af(Superellipsoid* p) { 
@@ -103,7 +104,7 @@ void Domain::initialise_outward_advancing_front(Superellipsoid* particles[4]) {
 	
 }
 
-
+/*
 int Domain::binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* mobile_particle) { 
 	Superellipsoid* fp1 = fixed_particles[0];
 	Superellipsoid* fp2 = fixed_particles[1];
@@ -190,7 +191,7 @@ int Domain::binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* 
 	std::cout << "[INFO]: relocated particle " << relocation_counter << " times." << std::endl;
 	return 0;
 }
-
+*/
 /***** Public *****/
 
 Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol) {
@@ -199,7 +200,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->x_bounds[1] = x_range[1];
 	this->y_bounds[0] = y_range[0];
 	this->y_bounds[1] = y_range[1];
-	this->z_bounds[0] = z_range[1];
+	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
 	this->particles = CoordinateIndexer();
@@ -211,7 +212,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->x_bounds[1] = x_range[1];
 	this->y_bounds[0] = y_range[0];
 	this->y_bounds[1] = y_range[1];
-	this->z_bounds[0] = z_range[1];
+	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
 	this->particles = CoordinateIndexer(n_particles);
@@ -223,7 +224,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->x_bounds[1] = x_range[1];
 	this->y_bounds[0] = y_range[0];
 	this->y_bounds[1] = y_range[1];
-	this->z_bounds[0] = z_range[1];
+	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
 	this->particles = CoordinateIndexer(particles);
@@ -237,3 +238,13 @@ void Domain::add_particle(Superellipsoid* p) {
 	double r = p->circumscribed_sphere_radius();
 	if (r > this->larges_circumscribing_sphere_radius) larges_circumscribing_sphere_radius = r; 
 }
+
+double Domain::volume(void) {
+	double x_len = this->x_bounds[1] - this->x_bounds[0];
+	double y_len = this->y_bounds[1] - this->y_bounds[0];
+	double z_len = this->z_bounds[1] - this->z_bounds[0];
+
+	return x_len * y_len * z_len;
+}
+
+

@@ -1,3 +1,4 @@
+#define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1	
 #include <cmath>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/src/Core/Matrix.h>
@@ -6,12 +7,30 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
-#include "superellipsoid.h"
+#include "superellipsoid.hpp"
+
+/***** Auxilirary functions *****/
 
 // Sign function. Returns the sign of input and 0 if input is 0.
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
+
+/***** Private *****/
+
+void Superellipsoid::set_scale(std::string param_name, double val) {
+	if (param_name == "a") {
+		this->scale[0] = val;	
+	} else if (param_name == "b") {
+		this->scale[1] = val;
+	} else if (param_name == "c") {
+		this->scale[2] = val;
+	} else {
+		throw std::invalid_argument("[ERROR]: invalid scale parameter name. Available are \"a\", \"b\", and \"c\"");
+	}
+}
+
+/***** Public *****/
 
 Superellipsoid::Superellipsoid(int cls, double scale_params[3], double shape_params[2]) {
 	double n1 = shape_params[0];
@@ -60,6 +79,16 @@ double Superellipsoid::get_shape(std::string param_name) {
 
 void Superellipsoid::set_center(Eigen::Vector3d c) { this->c = c; }
 void Superellipsoid::set_orientation(Eigen::Quaternion<double> q) { this->q = q; }
+
+double Superellipsoid::volume() {
+	double a = this->get_scale("a");
+	double b = this->get_scale("b");
+	double c = this->get_scale("c");
+	double n1 = this->get_shape("n1");
+	double n2 = this->get_shape("n2");
+
+	return 8 * a * b * c * (1/n1) * (1/n2) * std::beta(1/n1 + 1, 2/n1) * std::beta(1/n1, 1/n1);
+}
 
 double Superellipsoid::circumscribed_sphere_radius() {
 	double a = this->get_scale("a");
@@ -151,6 +180,18 @@ Eigen::Matrix3d Superellipsoid::inside_outside_hess(Eigen::Vector3d x) {
 			dydx, dydy, dydz, 
 			dzdx, dzdy, dzdz;
 	return hess;
+}
+
+void Superellipsoid::scale_to_volume(double vol) {
+	double scale_factor = std::pow(vol/this->volume(), 1.0/3.0);
+	
+	double a = this->get_scale("a");
+	double b = this->get_scale("b");
+	double c = this->get_scale("c");
+
+	this->set_scale("a", a*scale_factor);
+	this->set_scale("b", b*scale_factor);
+	this->set_scale("c", c*scale_factor);
 }
 
 
