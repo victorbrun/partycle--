@@ -8,10 +8,10 @@ project(Partycle-- VERSION 0.0.1)
 # Includes
 include(FetchContent)
 
-# Fetches Matplot++
+#Fetches Matplot++
 FetchContent_Declare(matplotplusplus
-        GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
-        GIT_TAG origin/master) # or whatever tag you want
+       GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
+       GIT_TAG origin/master) # or whatever tag you want
 
 FetchContent_GetProperties(matplotplusplus)
 if(NOT matplotplusplus_POPULATED)
@@ -19,6 +19,9 @@ if(NOT matplotplusplus_POPULATED)
     add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+#Include Matplotlibcpp and dependencies
+find_package(Python3 COMPONENTS Interpreter Development NumPy)
+include_directories(${Python3_INCLUDE_DIRS} include)
 
 # Compiler setting 
 set(CMAKE_CXX_STANDARD 20)
@@ -46,11 +49,15 @@ set(SOURCES
 	src/coordinate_indexer.hpp 
 			
 	src/domain.cpp 
-	src/domain.hpp 
+	src/domain.hpp
 			
 	src/particle_generation.cpp 
 	src/particle_generation.hpp
 )
 add_executable(partycle-- ${SOURCES})
 
+#Matplot++ linker
 target_link_libraries(partycle-- PUBLIC matplot)
+
+#Matplotlibcpp linker
+target_link_libraries(partycle-- PUBLIC ${Python3_LIBRARIES})

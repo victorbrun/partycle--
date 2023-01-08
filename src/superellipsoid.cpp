@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include "superellipsoid.hpp"
+#include <matplot/matplot.h>
 
 // Sign function. Returns the sign of input and 0 if input is 0.
 template <typename T> int sgn(T val) {
@@ -164,4 +165,54 @@ Eigen::Matrix3d Superellipsoid::inside_outside_hess(Eigen::Vector3d x) {
 	return hess;
 }
 
+std::tuple<std::vector<std::vector<double>>, std::vector<std::vector<double>>, std::vector<std::vector<double>>> 
+Superellipsoid::parametric_surface(Eigen::MatrixXd ETA, Eigen::MatrixXd OMEGA){
+	//Parameters
+	double a 	= this->get_scale("a"); 
+	double b 	= this->get_scale("b"); 
+	double c 	= this->get_scale("c");
+	double n1 	= this->get_shape("n1");
+	double n2 	= this->get_shape("n2");
 
+	//Rotation and translation
+	Eigen::Quaternion<double> R = this->get_orientation();
+	Eigen::Vector3d t = this->get_center();
+	Eigen::Vector3d vec, vecRot;
+
+	//X, Y and Z mesh points
+	int resolution = ETA.rows();
+	std::vector<double> f(resolution);
+	std::vector<std::vector<double>> X(resolution, f), Y(resolution, f), Z(resolution, f);
+
+	//Iterate through mesh and generate (x, y, z points)
+	for (int ix = 0; ix < resolution; ix++){
+		for (int jx = 0; jx < resolution; jx++){
+			//Get vector for one point (x, y, z)
+			vec(0) = a*sgn(std::cos(ETA(ix, jx)))*
+				std::pow(std::abs(std::cos(ETA(ix, jx))), 2/n1)*
+				sgn(std::cos(OMEGA(ix, jx)))*
+				std::pow(std::abs(std::cos(OMEGA(ix, jx))), 2/n2);
+
+			vec(1) = b*sgn(std::cos(ETA(ix, jx)))*
+				std::pow(std::abs(std::cos(ETA(ix, jx))), 2/n1)*
+				sgn(std::sin(OMEGA(ix, jx)))*
+				std::pow(std::abs(std::sin(OMEGA(ix, jx))), 2/n2);
+
+        	vec(2) = c*sgn(std::sin(ETA(ix, jx)))*
+				std::pow(std::abs(std::sin(ETA(ix, jx))), 2/n1);
+
+			//Rotate and translate vector
+			vecRot = R*vec + t;
+
+			//Write to mesh matrices
+			X[ix][jx] = vecRot(0);
+			Y[ix][jx] = vecRot(1);
+			Z[ix][jx] = vecRot(2);
+		}
+	}
+	//Convert to tuple of nested vectors
+	std::tuple<std::vector<std::vector<double>>, 
+			   std::vector<std::vector<double>>, 
+			   std::vector<std::vector<double>>> Pts_MESH(X, Y, Z);
+	return Pts_MESH;
+}

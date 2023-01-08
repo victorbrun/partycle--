@@ -81,7 +81,8 @@ class Superellipsoid {
 		 * @param `omega`: xy-place angle, defined on [-pi, pi).
 		 * @return radius vector evaluated at `eta`, `omega`.
 		 */
-		double parametric_surface(double eta, double omega);
+		std::tuple<std::vector<std::vector<double>>, std::vector<std::vector<double>>, std::vector<std::vector<double>>> 
+		parametric_surface(Eigen::MatrixXd ETA, Eigen::MatrixXd OMEGA);
 		
 		// Returns radius of smallest sphere enclosing whole Superellipsoid.
 		double circumscribed_sphere_radius();

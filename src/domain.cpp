@@ -4,9 +4,11 @@
 #include <cmath>
 #include <iostream>
 #include <tuple>
+#include <thread>
+#include "matplotlibcpp.h"
+#include <string>
 
 /***** Auxilirary functions *****/
-
 /**
  * Checks p1 and p2 are colliding.
  *
@@ -47,9 +49,9 @@ std::tuple<bool, double> check_collision(Superellipsoid* p1, Superellipsoid* p2)
 	}
 	return ret;
 }
+
 */
 /***** Private *****/
-
 void Domain::remove_particle_af(Superellipsoid* p) { 
 	// Searches for the index at which p is located in advancing_front
 	int remove_idx = -1;
@@ -230,7 +232,13 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->particles = CoordinateIndexer(particles);
 }
 
+Domain::Domain(std::vector<Superellipsoid*>* particles){
+	this->particles = CoordinateIndexer(particles);
+}
+
 int Domain::n_particles() { return this->particles.n_particles(); }
+
+std::vector<Superellipsoid*>* Domain::get_particles() {return this->particles.get_particles();}
 
 void Domain::add_particle(Superellipsoid* p) {
 	this->particles.add_particle(p);
@@ -238,3 +246,42 @@ void Domain::add_particle(Superellipsoid* p) {
 	double r = p->circumscribed_sphere_radius();
 	if (r > this->larges_circumscribing_sphere_radius) larges_circumscribing_sphere_radius = r; 
 }
+
+void Domain::draw(int resolution){
+	//Generate linspace for eta and omega
+	Eigen::VectorXd eta, omega; 
+	eta.setLinSpaced(resolution, -M_PI/2, M_PI/2);
+	omega.setLinSpaced(resolution, -M_PI, M_PI);
+
+	//Generate mesh
+	Eigen::MatrixXd ETA = eta.rowwise().replicate(resolution).transpose();
+	Eigen::MatrixXd OMEGA = omega.rowwise().replicate(resolution);
+
+	//Generate surface plot points
+	std::vector<double> f(resolution);
+	std::vector<std::vector<double>> X(resolution, f), Y(resolution, f), Z(resolution, f);
+	
+	//Collect all particles
+	std::vector<Superellipsoid*>* particles = this->get_particles();
+
+	//Plotting configs
+	namespace plt = matplotlibcpp;
+	plt::figure(1);
+
+	//Cmap args: 'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds'
+	//Todo: plot surface based on not yet implemented class for particle
+	std::map<std::string, std::string> keywords = {
+		{"cmap", "Greens"}
+	};
+
+	//Iterate and plot
+	for (int ix = 0; ix < this->n_particles(); ix++){
+		//Collect mesh points and surfaceplot		
+		std::tie(X, Y, Z) = particles->at(ix)->parametric_surface(ETA, OMEGA);
+		plt::plot_surface(X, Y, Z, keywords, 1);
+	}
+	
+	plt::show();
+	//plt::save("images.png");
+}
+
