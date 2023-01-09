@@ -17,6 +17,8 @@ void program_options::parse(int argc, char* argv[]) {
 	for (const std::string& arg : args) {
 		_input_args.push_back(arg);		
 	}
+
+
 }
 
 std::string program_options::get_option(const std::string& option_name) {
