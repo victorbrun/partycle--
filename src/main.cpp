@@ -1,11 +1,17 @@
 #include "particle_generation.hpp"
 #include "program_options.hpp"
 #include "superellipsoid.hpp"
+#include <cctype>
+#include <algorithm>
 #include <cstdlib>
+#include <fstream>
+#include <ios>
 #include <iostream>
 #include <regex>
+#include <sstream>
 #include <stdexcept>
 #include <filesystem>
+#include <string>
 
 std::vector<std::string> string_split(const std::string& s, const std::string& delim) {
 	// Allocates output vector and finds first 
@@ -60,8 +66,8 @@ std::vector<double> parse_domain(const std::string& domain_string) {
 
 std::vector<ParticleDistribution> parse_components_file(const std::string& file_name) {
 	// Checking that the component-file is a csv file 
-	std::regex file_format1("\\w*\\.csv$");
-	std::regex file_format2("\\w*\\.CSV$");
+	std::regex file_format1(".*\\.csv$");
+	std::regex file_format2(".*\\.CSV$");
 	if ( !std::regex_match(file_name, file_format1) && !std::regex_match(file_name, file_format2) ) {
 		throw std::runtime_error("particle--: specified component-file must be csv file without spaces in name, i.e. have .csv or .CSV file extension.");
 	}
@@ -71,9 +77,35 @@ std::vector<ParticleDistribution> parse_components_file(const std::string& file_
 		std::runtime_error("particle--: file does not exist.");
 	}
 
+	std::vector<std::vector<std::string>> content = read_csv(file_name);
+
 	std::vector<ParticleDistribution> pds;
 	return pds;
 
+}
+
+std::vector<std::vector<std::string>> read_csv(const std::string& file_name) {
+	std::fstream file(file_name, std::ios::in);
+	if (!file.is_open()) {
+		throw std::runtime_error("particle--: could not open file.");
+	}
+	
+	std::vector<std::vector<std::string>> rows;
+	std::string line;
+	size_t ix = 0;
+	while (std::getline(file, line)) {
+		// Extracting each field for the given line
+		std::vector<std::string> entries = string_split(line, ";");
+		for (size_t jx = 0; jx < entries.size(); jx++) {
+			// Removes whitespace of each entry
+			std::regex white_space("\\s+");
+			entries.at(ix) = std::regex_replace(entries.at(ix), white_space, "");
+			std::cout << entries.at(ix) << std::endl;
+			rows.push_back(entries);
+		}
+	}
+
+	return rows;
 }
 
 int main(int argc, char* argv[]) {
@@ -122,7 +154,6 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	// TODO: parse the domain bounds 
 	// TODO: read the file and parse the contents
 	// TODO: initiate domain and generate particles
 	// TODO: fill the domain using advancing front!!
