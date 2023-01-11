@@ -17,9 +17,7 @@ std::vector<std::vector<std::string>> read_csv(const std::string& file_name) {
 	while (std::getline(file, line)) {
 		// Extracting each field for the given line
 		std::vector<std::string> entries = string_split(line, ";");
-		for (size_t jx = 0; jx < entries.size(); jx++) {
-			rows.push_back(entries);
-		}
+		rows.push_back(entries);
 	}
 
 	return rows;
