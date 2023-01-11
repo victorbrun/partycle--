@@ -98,7 +98,6 @@ std::vector<ParticleDistribution> parse_components(const std::string& file_name)
 	if (content.size() < 2) {
 		throw std::runtime_error("particle--: component-file must have at least two rows where the first one is header.");
 	} else if (content.at(0).size() != 7) {
-		std::cout << "header length: " << content.at(0).size() << std::endl;
 		throw std::runtime_error("particle--: component-file must have the header: class;volume_distribution;reference_particle_a;reference_particle_b;reference_particle_c;reference_particle_n1;reference_particle_n2");
 	}
 
@@ -110,14 +109,6 @@ std::vector<ParticleDistribution> parse_components(const std::string& file_name)
 		throw std::runtime_error("particle--: component-file must have the header: class;volume_distribution;reference_particle_a;reference_particle_b;reference_particle_c;reference_particle_n1;reference_particle_n2");
 	}	
 	
-	std::cout << "content size: " << content.size() << std::endl;;
-	for (size_t ix = 0; ix < content.size(); ix++) {
-		for (size_t jx = 0; jx < content.at(ix).size(); jx++) {
-			std::cout << content.at(ix).at(jx) << " ";
-		}
-		std::cout << "\n";
-	}
-
 	// Extracting the information from contents and turning it into ParticleDistribution
 	std::vector<ParticleDistribution> pds; // For some reason i could not pre-allocate the size of pds so we push onto it
 	for (size_t ix = 1; ix < content.size(); ix++) {
@@ -127,8 +118,6 @@ std::vector<ParticleDistribution> parse_components(const std::string& file_name)
 		double scale_params[3] = {std::stod(row.at(2)), std::stod(row.at(3)), std::stod(row.at(4))};
 		double shape_params[2] = {std::stod(row.at(5)), std::stod(row.at(6))};
 			
-		std::cout << cls << " " << scale_params[0] << " " << scale_params[1] << " " << scale_params[2] << " " << shape_params[0] << " " << shape_params[1] << std::endl;
-
 		Superellipsoid p = Superellipsoid(cls, scale_params, shape_params);
 		ParticleDistribution pd = {cls, p, vol_dist};
 		pds.push_back(pd);

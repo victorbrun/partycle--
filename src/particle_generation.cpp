@@ -102,6 +102,14 @@ Distribution parse_distribution(const std::string& distr_string) {
 		param_vec.push_back(mu);
 		param_vec.push_back(sigma);
 
+	} else if (distr_name == "weibull") {
+		// Our representation is on the form weibull(k, lambda)
+		int comma_idx = param_string.find(",");
+		double k = std::stod(param_string.substr(0, comma_idx)); // shape parameter 
+		double lambda = std::stod(param_string.substr(comma_idx + 1)); // scale parameter
+			
+		param_vec.push_back(k);
+		param_vec.push_back(lambda);
 	} else {
 		throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");
 	}
@@ -154,6 +162,11 @@ double mean(const Distribution& d) {
 		double mu = d.args.at(0);
 		double sigma = d.args.at(1);
 		return std::exp(mu + sigma*sigma/2);
+	} else if (d.name == "weibull") {
+		// Our representation is on the form weibull(k, lambda)
+		double k = d.args.at(0);
+		double lambda = d.args.at(1);
+		return lambda * std::tgamma(1 + 1/k);
 	} else {
 		throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");
 	}
@@ -172,6 +185,10 @@ std::function<double(void)> get_sampler(const Distribution& d, std::mt19937& mt)
 		return [sampler, &mt]()mutable{return sampler(mt);};
 	} else if (d.name == "log-normal") {
 		std::lognormal_distribution<double> sampler(d.args.at(0), d.args.at(1));
+		return [sampler, &mt]()mutable{return sampler(mt);};
+	} else if (d.name == "weibull") {
+		// Our representation is on the form weibull(k, lambda)
+		std::weibull_distribution<double> sampler(d.args.at(0), d.args.at(1));
 		return [sampler, &mt]()mutable{return sampler(mt);};
 	} else {
 		throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");

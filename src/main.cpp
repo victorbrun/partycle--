@@ -57,7 +57,6 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	// TODO: read the file and parse the contents
 	// TODO: initiate domain and generate particles
 	// TODO: fill the domain using advancing front!!
 	// TODO: Compute contact statistics and output it in some reasonable way
