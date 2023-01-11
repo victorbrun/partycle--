@@ -79,7 +79,7 @@ std::vector<double> parse_domain(const std::string& domain_string) {
 }
 
 
-std::vector<ParticleDistribution> parse_components(const std::string& file_name) {
+std::vector<Component> parse_components(const std::string& file_name) {
 	// Checking that the component-file is a csv file 
 	std::regex file_format1(".*\\.csv$");
 	std::regex file_format2(".*\\.CSV$");
@@ -97,32 +97,33 @@ std::vector<ParticleDistribution> parse_components(const std::string& file_name)
 	std::vector<std::vector<std::string>> content = read_csv(file_name);
 	if (content.size() < 2) {
 		throw std::runtime_error("particle--: component-file must have at least two rows where the first one is header.");
-	} else if (content.at(0).size() != 7) {
-		throw std::runtime_error("particle--: component-file must have the header: class;volume_distribution;reference_particle_a;reference_particle_b;reference_particle_c;reference_particle_n1;reference_particle_n2");
+	} else if (content.at(0).size() != 8) {
+		throw std::runtime_error("particle--: component-file must have the header: component_id;volume_distribution;reference_particle_a;reference_particle_b;reference_particle_c;reference_particle_n1;reference_particle_n2");
 	}
 
 	// Finally checks that the header has the right exact format with spelling and column name placement
 	std::vector<std::string> header = content.at(0);
-	bool header_check = (header.at(0) == "class") && (header.at(1) == "volume_distribution") && (header.at(2) == "reference_particle_a") && 
-						(header.at(3) == "reference_particle_b") && (header.at(4) == "reference_particle_c") && (header.at(5) == "reference_particle_n1") && (header.at(6) == "reference_particle_n2");
+	bool header_check = (header.at(0) == "component_id") && (header.at(1) == "volume_distribution") && (header.at(2) == "volume_fraction") && (header.at(3) == "reference_particle_a") && 
+						(header.at(4) == "reference_particle_b") && (header.at(5) == "reference_particle_c") && (header.at(6) == "reference_particle_n1") && (header.at(7) == "reference_particle_n2");
 	if (!header_check) {
-		throw std::runtime_error("particle--: component-file must have the header: class;volume_distribution;reference_particle_a;reference_particle_b;reference_particle_c;reference_particle_n1;reference_particle_n2");
+		throw std::runtime_error("particle--: component-file must have the header: component_id;volume_distribution;reference_particle_a;reference_particle_b;reference_particle_c;reference_particle_n1;reference_particle_n2");
 	}	
 	
 	// Extracting the information from contents and turning it into ParticleDistribution
-	std::vector<ParticleDistribution> pds; // For some reason i could not pre-allocate the size of pds so we push onto it
+	std::vector<Component> components; // For some reason i could not pre-allocate the size of pds so we push onto it
 	for (size_t ix = 1; ix < content.size(); ix++) {
 		std::vector<std::string> row = content.at(ix);
-		int cls = std::stoi(row.at(0));
+		int component_id = std::stoi(row.at(0));
 		Distribution vol_dist = parse_distribution(row.at(1));
-		double scale_params[3] = {std::stod(row.at(2)), std::stod(row.at(3)), std::stod(row.at(4))};
-		double shape_params[2] = {std::stod(row.at(5)), std::stod(row.at(6))};
+		double target_volume_fraction = std::stod(row.at(2));
+		double scale_params[3] = {std::stod(row.at(3)), std::stod(row.at(4)), std::stod(row.at(5))};
+		double shape_params[2] = {std::stod(row.at(6)), std::stod(row.at(7))};
 			
-		Superellipsoid p = Superellipsoid(cls, scale_params, shape_params);
-		ParticleDistribution pd = {cls, p, vol_dist};
-		pds.push_back(pd);
+		Superellipsoid p = Superellipsoid(component_id, scale_params, shape_params);
+		Component cmp = {component_id, p, vol_dist, target_volume_fraction};
+		components.push_back(cmp);
 	}
 
-	return pds;
+	return components;
 }
 

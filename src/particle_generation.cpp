@@ -13,50 +13,48 @@
 #include <stdexcept>
 #include <random>
 
-std::vector<Superellipsoid*>* generate_random_particles(const std::vector<ParticleDistribution>& particle_distributions, 
-														const std::vector<double>& volume_fractions,
-														const double domain_volume) 
+std::vector<Superellipsoid*>* generate_random_particles(const std::vector<Component>& components, const double domain_volume) 
 {
-	if ( particle_distributions.size() != volume_fractions.size() ) {
-		throw std::invalid_argument("[ERROR]: size of particle_distributions does not equal size of volume_fractions.");
-	}
-
-	// Checks that each particle distribution has unique cls value since having two
-	// distribution for the same class of particle is not well defined.
-	for (size_t ix = 0; ix < particle_distributions.size(); ix++) {
-		int cls1 = particle_distributions.at(ix).cls;
-		for (size_t jx = ix+1; jx < particle_distributions.size(); jx++) {
-			int cls2 = particle_distributions.at(jx).cls;
+	// Checks that each component has unique component_id value since having two volume
+	// distributions for the same component is not well defined (yet..). Also checks that
+	// the target volume fractions sum to one.
+	double frac_sum = 0;
+	for (size_t ix = 0; ix < components.size(); ix++) {
+		int cls1 = components.at(ix).component_id;
+		for (size_t jx = ix+1; jx < components.size(); jx++) {
+			int cls2 = components.at(jx).component_id;
 			if ( cls1 == cls2 ) {
 				throw std::invalid_argument("[ERROR]: each ParticleDistribution must have a unique cls value.");
 			}
 		}
+		frac_sum += components.at(ix).target_volume_fraction;
 	}
 	// Initialises random number generator.
 	std::random_device rd;
 	std::mt19937 mt(rd());
 
 	// Computes the expected number of particles needed of each class to achieve `volume_fractions`
-	std::vector<int> exp_n_particles = expected_particles_needed(particle_distributions, volume_fractions, domain_volume);
+	std::vector<int> exp_n_particles = expected_particles_needed(components, domain_volume);
 	int total_n_particles = std::accumulate(exp_n_particles.begin(), exp_n_particles.end(), 0);
+	std::cout << "[INFO]: generating " << total_n_particles << " particles.." << std::endl;
 
 	// Allocates vector on heap to store particles 
 	std::vector<Superellipsoid*>* particles = new std::vector<Superellipsoid*>(total_n_particles);
 	
 	size_t kx = 0; // Keeps track of next index in particles
 	for (size_t ix = 0; ix < exp_n_particles.size(); ix++) {
-		ParticleDistribution pd = particle_distributions.at(ix);
-		std::function<double(void)> volume_sampler = get_sampler(pd.volume_distribution, mt);
+		Component cmp = components.at(ix);
+		std::function<double(void)> volume_sampler = get_sampler(cmp.volume_distribution, mt);
 
 		// Extracts parameters for reference particle 
-		Superellipsoid p = pd.reference_particle;
-		int cls = pd.cls;
+		Superellipsoid p = cmp.reference_particle;
+		int component_id = cmp.component_id;
 		double scale_params[3] = {p.get_scale("a"), p.get_scale("b"), p.get_scale("c")};
 		double shape_params[2] = {p.get_shape("n1"), p.get_shape("n2")};
 		
 		// Genereates new particles with random volume and rotation
 		for (size_t jx = 0; jx < (size_t)exp_n_particles.at(ix); jx++) {
-			Superellipsoid* new_p = new Superellipsoid(cls, scale_params, shape_params);
+			Superellipsoid* new_p = new Superellipsoid(component_id, scale_params, shape_params);
 			new_p->set_orientation(random_quaternion(mt));
 			new_p->scale_to_volume(volume_sampler());
 			particles->at(kx) = new_p;
@@ -120,13 +118,11 @@ Distribution parse_distribution(const std::string& distr_string) {
 	return parsed_distr;
 }
 
-std::vector<int> expected_particles_needed(const std::vector<ParticleDistribution>& particle_distributions, 
-										   const std::vector<double>& target_volume_fractions,
-										   double domain_volume) {
-	std::vector<int> n(particle_distributions.size());
+std::vector<int> expected_particles_needed(const std::vector<Component>& components, const double domain_volume) {
+	std::vector<int> n(components.size());
 	for (size_t ix = 0; ix < n.size(); ix++) {
-		Distribution d = particle_distributions.at(ix).volume_distribution;
-		double eta = target_volume_fractions.at(ix);
+		Distribution d = components.at(ix).volume_distribution;
+		double eta = components.at(ix).target_volume_fraction;
 
 		n.at(ix) = eta*domain_volume/mean(d);
 	}
@@ -134,15 +130,14 @@ std::vector<int> expected_particles_needed(const std::vector<ParticleDistributio
 	return n;
 }
 
-std::vector<double> particle_class_selection_prob(const std::vector<ParticleDistribution>& particle_distributions,
-												  const std::vector<double>& target_volume_fractions,
+std::vector<double> particle_class_selection_prob(const std::vector<Component>& components,
 												  const double domain_volume,
 												  const size_t n_particles) {
-	std::vector<double> p(particle_distributions.size());
+	std::vector<double> p(components.size());
 	
 	for (size_t ix = 0; ix < p.size(); ix++) {
-		double f = target_volume_fractions.at(ix);
-		Distribution vol_d = particle_distributions.at(ix).volume_distribution;
+		double f = components.at(ix).target_volume_fraction;
+		Distribution vol_d = components.at(ix).volume_distribution;
 
 		p.at(ix) = domain_volume * f /(n_particles * mean(vol_d));
 	}
@@ -208,6 +203,3 @@ Eigen::Quaternion<double> random_quaternion(std::mt19937& mt) {
 
 	return q;
 }
-
-
-

@@ -32,7 +32,7 @@ void Superellipsoid::set_scale(std::string param_name, double val) {
 
 /***** Public *****/
 
-Superellipsoid::Superellipsoid(int cls, double scale_params[3], double shape_params[2]) {
+Superellipsoid::Superellipsoid(int component_id, double scale_params[3], double shape_params[2]) {
 	double n1 = shape_params[0];
 	double n2 = shape_params[1];
 	if (n1 < 2 || n2 < 2) {
@@ -48,10 +48,10 @@ Superellipsoid::Superellipsoid(int cls, double scale_params[3], double shape_par
 	this->scale[1] = b;
 	this->scale[2] = c;
 		
-	this->cls = cls;
+	this->component_id = component_id;
 }
 
-int Superellipsoid::get_class() { return this->cls; }
+int Superellipsoid::get_component_id() { return this->component_id; }
 Eigen::Vector3d Superellipsoid::get_center() { return this->c; }
 Eigen::Quaternion<double> Superellipsoid::get_orientation() { return this->q; }
 
