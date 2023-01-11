@@ -67,7 +67,7 @@ std::vector<Superellipsoid*>* generate_random_particles(const std::vector<Partic
 	return particles;
 }
 
-Distribution parse_distribution(std::string distr_string) {
+Distribution parse_distribution(const std::string& distr_string) {
 	int open_bracket_idx = distr_string.find("(");
 	std::string distr_name = distr_string.substr(0, open_bracket_idx);
 	std::string param_string = distr_string.substr(open_bracket_idx + 1, distr_string.size() - open_bracket_idx - 2);

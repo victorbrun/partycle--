@@ -26,8 +26,4 @@ std::vector<double> parse_domain(const std::string& domain_string);
  */
 std::vector<ParticleDistribution> parse_components(const std::string& file_name);
 
-/**
- *
- */
-
 #endif

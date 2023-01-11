@@ -53,7 +53,7 @@ std::tuple<bool, double> check_collision(Superellipsoid* p1, Superellipsoid* p2)
 void Domain::remove_particle_af(Superellipsoid* p) { 
 	// Searches for the index at which p is located in advancing_front
 	int remove_idx = -1;
-	for (int ix = 0; ix < this->advancing_front.size(); ix++) {
+	for (size_t ix = 0; ix < this->advancing_front.size(); ix++) {
 		if (this->advancing_front.at(ix) == p) remove_idx = ix;
 	}
 

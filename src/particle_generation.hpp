@@ -41,7 +41,7 @@ std::vector<Superellipsoid*>* generate_random_particles(const std::vector<Partic
 														const std::vector<double>& volume_fractions, 
 														const double domain_volume); 
 
-Distribution parse_distribution(std::string distr_string);
+Distribution parse_distribution(const std::string& distr_string);
 
 /**
  * Computes the expected number of particles of each class 

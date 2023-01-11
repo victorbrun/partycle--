@@ -158,7 +158,7 @@ std::vector<Superellipsoid*> CoordinateIndexer::particles_in_domain(double x_ran
 	std::vector<int> xyz_particle_idx = this->intersect(xy_particle_idx, z_particle_idx);
 
 	std::vector<Superellipsoid*> result(xyz_particle_idx.size());
-	for (int ix = 0; ix < result.size(); ix++) {
+	for (size_t ix = 0; ix < result.size(); ix++) {
 		int idx = xyz_particle_idx.at(ix);
 		result.at(ix) = this->particles->at(idx);	
 	}
