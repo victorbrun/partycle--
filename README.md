@@ -9,7 +9,7 @@ In order for the program to generate a mixture it must know which components to 
 
 | **Column name**       | **Description** | **Example**        |
 | --------------------- | --------------- | ------------------ |
-| class                 | Unique integer. Used to distinguish between components.         | 1        |
+| component_id          | Unique integer. Used to distinguish between components.         | 1        |
 | volume_distribution   | String representing a distribution and its parameters which describes the volume of the components reference particle. Available distributions are discussed below.	| normal(10,1) |
 | volume_fraction       | Fraction describing how large part of the mixture that is composed of this component. This volume fraction regards the total volume of all particles and does not include the domain volume in which they are put, i.e. porosity is not included here (or it is more precisely assumed to be 0). This means that the sum of a mixture's components respective volume fraction must add up to 1. This quantity can be computed using the weight fraction of the components together with their respective densities. | 0.789	             |
 | reference_particle_a  | Scale parameter in x-axis (before possible rotation).   	  | 1.5      |
