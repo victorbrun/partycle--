@@ -103,6 +103,12 @@ class Domain {
 
 		void draw(int samples);
 
+		/**
+		 * Writes the particles in the domain to a csv file of name `file_name`
+		 * in the build/output.
+		 */
+		void write_csv(const std::string& file_name);
+
 };
 
 #endif

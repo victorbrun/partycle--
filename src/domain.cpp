@@ -1,12 +1,12 @@
 #include "domain.hpp"
 #include "superellipsoid.hpp"
-#include "matplotlibcpp.h"
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <iostream>
-#include <tuple>
 #include <random>
+#include <regex>
 
 bool check_collision(Superellipsoid* p1, Superellipsoid* p2) {
 	Eigen::Vector3d c1 = p1->get_center();
@@ -422,41 +422,39 @@ void Domain::initialise_outward_advancing_front(Superellipsoid* particles[4]) {
 	}
 }
 
-void Domain::draw(int resolution){
-	//Generate linspace for eta and omega
-	Eigen::VectorXd eta, omega; 
-	eta.setLinSpaced(resolution, -M_PI/2, M_PI/2);
-	omega.setLinSpaced(resolution, -M_PI, M_PI);
+void Domain::write_csv(const std::string& file_name) {
+	// Checking that the component-file is a csv file 
+	std::regex file_format1(".*\\.csv$");
+	std::regex file_format2(".*\\.CSV$");
+	if ( !std::regex_match(file_name, file_format1) && !std::regex_match(file_name, file_format2) ) {
+		throw std::runtime_error("invalid file format. Must be CSV");
+	}
 
-	//Generate mesh
-	Eigen::MatrixXd ETA = eta.rowwise().replicate(resolution).transpose();
-	Eigen::MatrixXd OMEGA = omega.rowwise().replicate(resolution);
-
-	//Generate surface plot points
-	std::vector<double> f(resolution);
-	std::vector<std::vector<double>> X(resolution, f), Y(resolution, f), Z(resolution, f);
-	
-	//Collect all particles
+	std::ofstream file;
+	std::string header = "component_id;a;b;c;n1;n2;center_x;center_y;center_z;rot_w;rot_x;rot_y;rot_z";
 	std::vector<Superellipsoid*>* particles = this->get_particles();
 
-	//Plotting configs
-	namespace plt = matplotlibcpp;
-	plt::figure(1);
+	file.open(file_name);
+	file << header << "\n";
+	for (size_t ix = 0; ix < this->n_particles(); ix++) {
+		Superellipsoid* p = particles->at(ix);
+		int cid = p->get_component_id();
+		double a = p->get_scale("a");
+		double c = p->get_scale("b");
+		double b = p->get_scale("c");
+		double n1 = p->get_shape("n1");
+		double n2 = p->get_shape("n2");
+		double x = p->get_center()[0];
+		double y = p->get_center()[1];
+		double z = p->get_center()[2];
+		
+		// The quaternion is on the form w + xi + yj + zk
+		double rot_w = p->get_orientation().w();
+		double rot_x = p->get_orientation().x();
+		double rot_y = p->get_orientation().y();
+		double rot_z = p->get_orientation().z();
 
-	//Cmap args: 'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds'
-	//Todo: plot surface based on not yet implemented class for particle
-	std::map<std::string, std::string> keywords = {
-		{"cmap", "Greens"}
-	};
-
-	//Iterate and plot
-	for (int ix = 0; ix < this->n_particles(); ix++){
-		//Collect mesh points and surfaceplot		
-		std::tie(X, Y, Z) = particles->at(ix)->parametric_surface(ETA, OMEGA);
-		std::cout << "here" << std::endl;
-		plt::plot_surface(X, Y, Z, keywords, 1);
+		file << cid << ";" << a << ";" << b << ";" << c << ";" << n1 << ";" << n2 << ";" << x << ";" << y << ";" << z << ";" << rot_w << ";" << rot_x << ";" << rot_y << ";" << rot_z << "\n"; 
 	}
-	
-	plt::show();
-	//plt::save("images.png");
+	file.close();
 }
