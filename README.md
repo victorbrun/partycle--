@@ -4,7 +4,7 @@ C++ program for geometrically generating particle mixtures and computing contact
 ## Getting started
 
 
-### Components list format
+## Components list format
 In order for the program to generate a mixture it must know which components to include in the mixture, this is specified by providing a ";"-separated CSV file. The fields in this CSV file is specified in below table.
 
 | **Column name**       | **Description** | **Example**        |
@@ -26,3 +26,14 @@ component_id;volume_distribution;volume_fraction;reference_particle_a;reference_
 3;normal(10,2);0.25;5;1;1;5;2
 4;weibull(1,5);0.25;1;3;1;2;2
 ```
+
+### Volume distributions
+The volume distribution of a given component describes the volume of a particle of that component. This distribution does not describe the shape of the particle, this is done by the components specified reference particle. In other words; if a realisation of the volume distribution for some particle of some component yields 2, then the component's reference particle will have its scale parameters equally scaled so that the volume becomes 2.  
+
+To specify the volume distribution for a component, a string on the form `<distribution_name>(<parameters...>)` is utilised in the components file. The available distributions and relating parameters is presented in the below table.
+| **String format**    | **Parameters** | **Example** |
+| -------------------- | -------------- | ----------- |
+| uniform(a,b)         | `a` and `b` defines the interval [a,b] on which is the distributions support. | uniform(1,9.9) |
+| normal(mu,sigma)     | `mu` is the expectation of a random variable with this distribution. `sigma` is the variance of a random variable with this distribution. | normal(2.5,0.25) |
+| log-normal(mu,sigma) | `mu` is the expectation of the logarithm of a random variable with this distribution. `sigma` is the variance of the logarithm of a random variable with this distribution. | log-normal(1,0.25) |
+| weibull(k, lambda)   | `k` is the shape parameter. `lambda` is the scale parameter. | |
