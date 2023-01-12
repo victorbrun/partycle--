@@ -36,7 +36,6 @@ std::vector<Superellipsoid*>* generate_random_particles(const std::vector<Compon
 	// Computes the expected number of particles needed of each class to achieve `volume_fractions`
 	std::vector<int> exp_n_particles = expected_particles_needed(components, domain_volume);
 	int total_n_particles = std::accumulate(exp_n_particles.begin(), exp_n_particles.end(), 0);
-	std::cout << "[INFO]: generating " << total_n_particles << " particles.." << std::endl;
 
 	// Allocates vector on heap to store particles 
 	std::vector<Superellipsoid*>* particles = new std::vector<Superellipsoid*>(total_n_particles);

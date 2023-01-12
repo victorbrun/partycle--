@@ -66,7 +66,7 @@ void Domain::add_particle_af(Superellipsoid* p) {
 }
 
 std::vector<Superellipsoid*> Domain::particles_in_subdomain(double x_range[2], double y_range[2], double z_range[2]) {
-	return this->particles.particles_in_domain(x_range, y_range, z_range);
+	return this->particles->particles_in_domain(x_range, y_range, z_range);
 }
 
 void Domain::initialise_outward_advancing_front(Superellipsoid* particles[4]) {
@@ -203,7 +203,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
-	this->particles = CoordinateIndexer();
+	this->particles = new CoordinateIndexer();
 }
 
 Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, int n_particles) {
@@ -215,7 +215,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
-	this->particles = CoordinateIndexer(n_particles);
+	this->particles = new CoordinateIndexer(n_particles);
 }
 
 Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, std::vector<Superellipsoid*>* particles) {
@@ -227,13 +227,18 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
-	this->particles = CoordinateIndexer(particles);
+	this->particles = new CoordinateIndexer(particles);
 }
 
-int Domain::n_particles() { return this->particles.n_particles(); }
+Domain::~Domain() {
+	std::cout << "[INFO]: destroying domain instance" << std::endl;
+	delete particles;
+}
+	
+int Domain::n_particles() { return this->particles->n_particles(); }
 
 void Domain::add_particle(Superellipsoid* p) {
-	this->particles.add_particle(p);
+	this->particles->add_particle(p);
 	
 	double r = p->circumscribed_sphere_radius();
 	if (r > this->larges_circumscribing_sphere_radius) larges_circumscribing_sphere_radius = r; 

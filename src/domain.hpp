@@ -9,7 +9,7 @@
 class Domain {
 	private:
 		// Class that contains all particles
-		CoordinateIndexer particles;
+		CoordinateIndexer* particles;
 		
 		// Bounds of the domain
 		double x_bounds[2];
@@ -82,7 +82,10 @@ class Domain {
 
 		// Constructor with particles available
 		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, std::vector<Superellipsoid*>* particles);
-		
+
+		// Destructor
+		~Domain();
+
 		/** 
 		 * Reserves space for n_particles. Ought to be used when you need domain
 		 * volume in order to compute the number of particles if will be filled with.

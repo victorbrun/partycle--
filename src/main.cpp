@@ -5,6 +5,8 @@
 #include "domain.hpp"
 
 #include <iostream>
+#include <numeric>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -71,20 +73,46 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	// Creates domain in which to place particles 
+	// Defines domain bounds 
 	double x_range[2] = {domain_bounds.at(0), domain_bounds.at(1)};
 	double y_range[2] = {domain_bounds.at(2), domain_bounds.at(3)};
 	double z_range[2] = {domain_bounds.at(4), domain_bounds.at(5)};
-	Domain domain = Domain(x_range, y_range, z_range, contact_tol);
-	double domain_vol = domain.volume();
+	double domain_vol = (x_range[1] - x_range[0]) * (y_range[1] - y_range[0]) * (z_range[1] - z_range[0]);
 
-	// Generates particles acording to the specification given in component-file
+	// Generates particles acocrding to the specification given in component-file
 	std::vector<Superellipsoid*>* particles = generate_random_particles(components, domain_vol);
+	std::cout << "[INFO]: generating " << particles->size() << " particles.." << std::endl;
+
+	// Initialises domain. This is done here and not where its bounds are defined since we want to 
+	// specify the number of particles we are going to add to it. This will make the domain pre-allocate
+	// memory.
+	Domain domain = Domain(x_range, y_range, z_range, contact_tol, particles->size());
+	
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::uniform_real_distribution<double> x(x_range[0], x_range[1]);
+	std::uniform_real_distribution<double> y(y_range[0], y_range[1]);
+	std::uniform_real_distribution<double> z(z_range[0], z_range[1]);
+
+	// Places particles randomly in domain to test
+	std::cout << "[INFO]: randomly places particles in domain" << std::endl;
+	for (size_t ix = 0; ix < particles->size(); ix++) {
+		Superellipsoid* p = particles->at(ix);
+
+		Eigen::Vector3d center(x(mt), y(mt), z(mt));
+		p->set_center(center);
+		domain.add_particle(p);
+	}
+
 
 	// TODO: double check that the target volume fractions are achieved after the change ParticleDistribution -> Component
 	// TODO: fill the domain using advancing front!!
 	// TODO: Compute contact statistics and output it in some reasonable way
 	// TODO: DONE!
-	
+
+	std::cout << "[INFO]: program finished, cleaning up.. " << std::endl;
+	std::cout << "[INFO]: destroying generated particles" << std::endl;
+	delete particles;	
+
 	return EXIT_SUCCESS;
 }
