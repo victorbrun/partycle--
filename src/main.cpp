@@ -1,161 +1,118 @@
 #include "particle_generation.hpp"
-#include "superellipsoid.hpp" 
-#include "coordinate_indexer.hpp" 
+#include "program_options.hpp"
+#include "superellipsoid.hpp"
+#include "utils.hpp"
 #include "domain.hpp"
-#include <eigen3/Eigen/src/Core/Matrix.h>
-#include <eigen3/Eigen/src/Core/util/Constants.h>
-#include <eigen3/Eigen/src/Geometry/Quaternion.h>
+
 #include <iostream>
+#include <numeric>
 #include <random>
+#include <sstream>
 #include <stdexcept>
-#include <vector>
+#include <string>
 
-int main() {
-	/*
-	int n_particles = 100;
-	std::vector<Superellipsoid*>* super_arr = new std::vector<Superellipsoid*>(n_particles);
-	for (int ix = 0; ix < n_particles; ix++) {
-		double scale_params[3] = {1,1,1};
-		double shape_params[2] = {2,2};
-		super_arr->at(ix) = new Superellipsoid(0, scale_params, shape_params);
-		Eigen::Vector3d center(100-ix,100-ix,100-ix);
-		Eigen::Quaternion<double> rot(1,1,1,1);
+#define CONTACT_TOL 1e-3
 
-		super_arr->at(ix)->set_center(center);
-		super_arr->at(ix)->set_orientation(rot);
+int main(int argc, char* argv[]) {
+	// Parses input arguments and stores them in file-scope varaibel	
+	program_options::parse(argc, argv);
+
+	// Extract the contact tolerance from parsed input. Note that
+	// there is no catch for when input tolerance cannot be converted to double.
+	double contact_tol;
+	if (program_options::get_option("--contact-tolerance") != "") {
+		contact_tol = std::stod(program_options::get_option("--contact-tolerance"));
+	} else if (program_options::get_option("-ct") != "") {
+		contact_tol = std::stod(program_options::get_option("-ct"));
+	} else {
+		contact_tol = CONTACT_TOL;
 	}
 
-	CoordinateIndexer ci = CoordinateIndexer(super_arr);	
-	
-	double x_range[2] = {4, 20};
-	double y_range[2] = {4, 20};
-	double z_range[2] = {4, 20};
-	std::vector<Superellipsoid*> result = ci.particles_in_domain(x_range, y_range, z_range);
-	
-	for (int ix = 0; ix < result.size(); ix++) {
-		auto c = result[ix]->get_center();
-		std::cout << "ix =" << ix << ": (x,y,z) = (" << c[0] << "," << c[1] << "," << c[2] << ")" << std::endl;
+	// Extracts domain from parsed input 
+	std::string domain_string;
+	if (program_options::get_option("--domain") != "") {
+		domain_string = program_options::get_option("--domain");
+	} else if (program_options::get_option("-d") != "") {
+		domain_string = program_options::get_option("-d");
+	} else {
+		std::cerr << "partycle--: need domain to be defined" << "\n";
+		std::cerr << "usage: partycle-- [-d|--domain] [ax,bx]x[ay,by]x[az,bz] [-cf|--component-file] <input_file>...\n";
+		return EXIT_FAILURE;
 	}
 
-	for (int ix = 0; ix < n_particles; ix++) {
-		double scale_params[3] = {1,1,1};
-		double shape_params[2] = {10,20};
-		Eigen::Vector3d center(100-ix,100-ix,100-ix);
-		Eigen::Quaternion<double> rot(1,1,1,1);
+	// Tries to parse the domain string into bounds for the domain 
+	std::vector<double> domain_bounds;
+	try {
+		domain_bounds = parse_domain(domain_string);
+	} catch (const std::runtime_error& err) {
+		std::cerr << err.what() << "\n";
+		return EXIT_FAILURE;
+	}
+	
+	// Extracts the file containing the information about each component in the mixture
+	std::string components_file_name;
+	if (program_options::get_option("--component-file") != "") {
+		components_file_name = program_options::get_option("--component-file");
+	} else if (program_options::get_option("-cf") != "") {
+		components_file_name = program_options::get_option("-cf");
+	} else {
+		std::cerr << "partycle--: CSV file containing mixture components must be provided" << "\n";
+		std::cerr << "usage: partycle-- [-d|--domain] [ax,bx]x[ay,by]x[az,bz] [-cf|--component-file] <input_file>...\n";
+		return EXIT_FAILURE;
+	}
 
-		Superellipsoid* p = new Superellipsoid(0, scale_params, shape_params);
+	// Tries to parse the contents of the component-file
+	std::vector<Component> components;
+	try {
+		components = parse_components(components_file_name);
+	} catch (const std::runtime_error& err) {
+		std::cerr << err.what() << "\n";
+		return EXIT_FAILURE;
+	} catch (const std::invalid_argument& err) {
+		std::cerr << err.what() << "\n";
+		return EXIT_FAILURE;
+	}
+
+	// Defines domain bounds 
+	double x_range[2] = {domain_bounds.at(0), domain_bounds.at(1)};
+	double y_range[2] = {domain_bounds.at(2), domain_bounds.at(3)};
+	double z_range[2] = {domain_bounds.at(4), domain_bounds.at(5)};
+	double domain_vol = (x_range[1] - x_range[0]) * (y_range[1] - y_range[0]) * (z_range[1] - z_range[0]);
+
+	// Generates particles acocrding to the specification given in component-file
+	std::vector<Superellipsoid*>* particles = generate_random_particles(components, domain_vol);
+	std::cout << "[INFO]: generating " << particles->size() << " particles.." << std::endl;
+
+	// Initialises domain. This is done here and not where its bounds are defined since we want to 
+	// specify the number of particles we are going to add to it. This will make the domain pre-allocate
+	// memory.
+	Domain domain = Domain(x_range, y_range, z_range, contact_tol, particles->size());
+	
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::uniform_real_distribution<double> x(x_range[0], x_range[1]);
+	std::uniform_real_distribution<double> y(y_range[0], y_range[1]);
+	std::uniform_real_distribution<double> z(z_range[0], z_range[1]);
+
+	// Places particles randomly in domain to test
+	std::cout << "[INFO]: randomly places particles in domain" << std::endl;
+	for (size_t ix = 0; ix < particles->size(); ix++) {
+		Superellipsoid* p = particles->at(ix);
+
+		Eigen::Vector3d center(x(mt), y(mt), z(mt));
 		p->set_center(center);
-		p->set_orientation(rot);
-		
-		ci.add_particle(p);
-	}
-
-	std::cout << "volume: " << super_arr->at(0)->volume() << std::endl;
-	*/
-
-	double ref_p1_scale[3] = {1,1,1};
-	double ref_p2_scale[3] = {2,1,2};
-	double ref_p3_scale[3] = {1,2,1};
-
-	double ref_p1_shape[2] = {2,2};
-	double ref_p2_shape[2] = {2,5};
-	double ref_p3_shape[2] = {5,2};
-
-	Superellipsoid ref_p1(1, ref_p1_scale, ref_p1_shape); 
-	Superellipsoid ref_p2(2, ref_p2_scale, ref_p2_shape); 
-	Superellipsoid ref_p3(3, ref_p3_scale, ref_p3_shape); 
-
-	std::vector<double> ref_p1_vol_distr_args = {5, 7};
-	std::vector<double> ref_p2_vol_distr_args = {10, 2};
-	std::vector<double> ref_p3_vol_distr_args = {1, 0.25};
-
-	std::vector<ParticleDistribution> pd = {
-		{1, ref_p1, {"uniform", ref_p1_vol_distr_args}},
-		{2, ref_p2, {"normal", ref_p2_vol_distr_args}},
-		{3, ref_p3, {"log-normal", ref_p3_vol_distr_args}},
-	};
-	std::vector<double> target_volume_fractions = {0.2, 0.5, 0.3};
-
-	double x_range[2] = {0,50};
-	double y_range[2] = {0,50};
-	double z_range[2] = {0,50};
-	double domain_vol = (x_range[1]-x_range[0])*(y_range[1]-y_range[0])*(z_range[1]-z_range[0]); 
-	std::vector<int> exp_n_particles = expected_particles_needed(pd, target_volume_fractions, domain_vol);
-	int n_particles = std::accumulate(exp_n_particles.begin(), exp_n_particles.end(), 0);
-	Domain d = Domain(x_range, y_range, z_range, n_particles);
-	
-	// Generates random particles and saves them on the heap
-	size_t runs = 50;
-	Eigen::ArrayXXd samples = Eigen::ArrayXXd::Zero(3, runs);
-	std::cout << "Generating " << n_particles << " random particles of " << pd.size() << " different classes " << runs << " times." <<std::endl;
-	for (size_t jx = 0; jx < runs; jx++) {		
-		std::vector<Superellipsoid*>* particles = generate_random_particles_seq(pd, target_volume_fractions, domain_vol);
-		for (size_t ix = 0; ix < particles->size(); ix++) {
-			Superellipsoid* p = particles->at(ix);
-			samples(p->get_class()-1, jx) += p->volume();
-			//std::cout << "samples(" << p->get_class()-1 << "," << jx << ") = " << samples(p->get_class()-1, jx) << std::endl;
-		}
-		delete particles;
-	}
-
-	// Computes average volume over above runns
-	long double average_vol_arr[3] = {0, 0, 0};
-	for (size_t ix = 0; ix < runs; ix++) {
-		average_vol_arr[0] += samples(0, ix)/runs;
-		average_vol_arr[1] += samples(1, ix)/runs;
-		average_vol_arr[2] += samples(2, ix)/runs;
-
-		//std::cout << average_vol_arr[0] << " " << average_vol_arr[1] << " " << average_vol_arr[2] << std::endl;
-	}
-	
-
-	
-	long double vol_sum = average_vol_arr[0] + average_vol_arr[1] + average_vol_arr[2];
-	std::cout << " ---------- SEQUENTIALLY GENERATED PARTICLES -------------" << std::endl;
-	std::cout << "[INFO]: Target volume fractions: class 1: " << target_volume_fractions.at(0) << " class 2: " << target_volume_fractions.at(1) << " class 3: " << target_volume_fractions.at(2) << std::endl;  
-	std::cout << "[INFO]: Actual volume fractions: class 1: " << average_vol_arr[0]/vol_sum << " class 2: " << average_vol_arr[1]/vol_sum << " class 3: " << average_vol_arr[2]/vol_sum << std::endl;  
-	std::cout << "\n";	
-
-	/* Doing random class selection to generate particles */
-
-	// Generates random particles and saves them on the heap
-	runs = 50;
-	Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> samples2;
-	samples2.resize(3, runs);
-	for (size_t ix = 0; ix < 3; ix++) {
-		for (size_t jx = 0; jx < runs; jx++) {
-			samples2(ix,jx) = 0;
-		}
+		domain.add_particle(p);
 	}
 
 
-	std::cout << "Generating " << n_particles << " random particles of " << pd.size() << " different classes " << runs << " times." <<std::endl;
-	for (size_t jx = 0; jx < runs; jx++) {		
-		std::vector<Superellipsoid*>* particles = generate_random_particles_rnd(pd, target_volume_fractions, (size_t)n_particles);
-		for (size_t ix = 0; ix < particles->size(); ix++) {
-			Superellipsoid* p = particles->at(ix);
-			samples2(p->get_class()-1, jx) += p->volume();
-			//std::cout << "samples2(" << p->get_class()-1 << "," << jx << ") = " << samples2(p->get_class()-1, jx) << std::endl;
-		}
-		delete particles;
-	}
+	// TODO: double check that the target volume fractions are achieved after the change ParticleDistribution -> Component
+	// TODO: fill the domain using advancing front!!
+	// TODO: Compute contact statistics and output it in some reasonable way
+	// TODO: DONE!
 
-	// Computes average volume over above runns
-	average_vol_arr[0] = 0;
-	average_vol_arr[1] = 1;
-	average_vol_arr[2] = 2;
-	for (size_t ix = 0; ix < runs; ix++) {
-		average_vol_arr[0] += samples2(0, ix)/runs;
-		average_vol_arr[1] += samples2(1, ix)/runs;
-		average_vol_arr[2] += samples2(2, ix)/runs;
+	std::cout << "[INFO]: program finished, cleaning up.. " << std::endl;
+	std::cout << "[INFO]: destroying generated particles" << std::endl;
+	delete particles;	
 
-		//std::cout << average_vol_arr[0] << " " << average_vol_arr[1] << " " << average_vol_arr[2] << std::endl;
-	}
-
-	vol_sum = average_vol_arr[0] + average_vol_arr[1] + average_vol_arr[2];
-	std::cout << " ---------- RANDOMLY GENERATED PARTICLES -------------" << std::endl;
-	std::cout << "[INFO]: Target volume fractions: class 1: " << target_volume_fractions.at(0) << " class 2: " << target_volume_fractions.at(1) << " class 3: " << target_volume_fractions.at(2) << std::endl;  
-	std::cout << "[INFO]: Actual volume fractions: class 1: " << average_vol_arr[0]/vol_sum << " class 2: " << average_vol_arr[1]/vol_sum << " class 3: " << average_vol_arr[2]/vol_sum << std::endl;  
-
-	return 0;
+	return EXIT_SUCCESS;
 }

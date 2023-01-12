@@ -13,31 +13,28 @@
 #include <stdexcept>
 #include <random>
 
-std::vector<Superellipsoid*>* generate_random_particles_seq(const std::vector<ParticleDistribution>& particle_distributions, 
-														const std::vector<double>& volume_fractions,
-														double domain_volume) 
+std::vector<Superellipsoid*>* generate_random_particles(const std::vector<Component>& components, const double domain_volume) 
 {
-	if ( particle_distributions.size() != volume_fractions.size() ) {
-		throw std::invalid_argument("[ERROR]: size of particle_distributions does not equal size of volume_fractions.");
-	}
-
-	// Checks that each particle distribution has unique cls value since having two
-	// distribution for the same class of particle is not well defined.
-	for (int ix = 0; ix < particle_distributions.size(); ix++) {
-		int cls1 = particle_distributions.at(ix).cls;
-		for (int jx = ix+1; jx < particle_distributions.size(); jx++) {
-			int cls2 = particle_distributions.at(jx).cls;
+	// Checks that each component has unique component_id value since having two volume
+	// distributions for the same component is not well defined (yet..). Also checks that
+	// the target volume fractions sum to one.
+	double frac_sum = 0;
+	for (size_t ix = 0; ix < components.size(); ix++) {
+		int cls1 = components.at(ix).component_id;
+		for (size_t jx = ix+1; jx < components.size(); jx++) {
+			int cls2 = components.at(jx).component_id;
 			if ( cls1 == cls2 ) {
 				throw std::invalid_argument("[ERROR]: each ParticleDistribution must have a unique cls value.");
 			}
 		}
+		frac_sum += components.at(ix).target_volume_fraction;
 	}
 	// Initialises random number generator.
 	std::random_device rd;
 	std::mt19937 mt(rd());
 
 	// Computes the expected number of particles needed of each class to achieve `volume_fractions`
-	std::vector<int> exp_n_particles = expected_particles_needed(particle_distributions, volume_fractions, domain_volume);
+	std::vector<int> exp_n_particles = expected_particles_needed(components, domain_volume);
 	int total_n_particles = std::accumulate(exp_n_particles.begin(), exp_n_particles.end(), 0);
 
 	// Allocates vector on heap to store particles 
@@ -45,18 +42,18 @@ std::vector<Superellipsoid*>* generate_random_particles_seq(const std::vector<Pa
 	
 	size_t kx = 0; // Keeps track of next index in particles
 	for (size_t ix = 0; ix < exp_n_particles.size(); ix++) {
-		ParticleDistribution pd = particle_distributions.at(ix);
-		std::function<double(void)> volume_sampler = get_sampler(pd.volume_distribution, mt);
+		Component cmp = components.at(ix);
+		std::function<double(void)> volume_sampler = get_sampler(cmp.volume_distribution, mt);
 
 		// Extracts parameters for reference particle 
-		Superellipsoid p = pd.reference_particle;
-		int cls = pd.cls;
+		Superellipsoid p = cmp.reference_particle;
+		int component_id = cmp.component_id;
 		double scale_params[3] = {p.get_scale("a"), p.get_scale("b"), p.get_scale("c")};
 		double shape_params[2] = {p.get_shape("n1"), p.get_shape("n2")};
 		
 		// Genereates new particles with random volume and rotation
-		for (size_t jx = 0; jx < exp_n_particles.at(ix); jx++) {
-			Superellipsoid* new_p = new Superellipsoid(cls, scale_params, shape_params);
+		for (size_t jx = 0; jx < (size_t)exp_n_particles.at(ix); jx++) {
+			Superellipsoid* new_p = new Superellipsoid(component_id, scale_params, shape_params);
 			new_p->set_orientation(random_quaternion(mt));
 			new_p->scale_to_volume(volume_sampler());
 			particles->at(kx) = new_p;
@@ -67,57 +64,7 @@ std::vector<Superellipsoid*>* generate_random_particles_seq(const std::vector<Pa
 	return particles;
 }
 
-std::vector<Superellipsoid*>* generate_random_particles_rnd(const std::vector<ParticleDistribution>& particle_distributions, 
-														const std::vector<double>& volume_fractions,
-														const size_t n_particles) 
-{
-	if ( particle_distributions.size() != volume_fractions.size() ) {
-		throw std::invalid_argument("[ERROR]: size of particle_distributions does not equal size of volume_fractions.");
-	}
-
-	// Checks that each particle distribution has unique cls value since having two
-	// distribution for the same class of particle is not well defined.
-	for (int ix = 0; ix < particle_distributions.size(); ix++) {
-		int cls1 = particle_distributions.at(ix).cls;
-		for (int jx = ix+1; jx < particle_distributions.size(); jx++) {
-			int cls2 = particle_distributions.at(jx).cls;
-			if ( cls1 == cls2 ) {
-				throw std::invalid_argument("[ERROR]: each ParticleDistribution must have a unique cls value.");
-			}
-		}
-	}
-	// Allocates vector on heap to store particles 
-	std::vector<Superellipsoid*>* particles = new std::vector<Superellipsoid*>(n_particles);
-
-	// Initialises random number generator.
-	std::random_device rd;
-	std::mt19937 mt(rd());
-
-	std::vector<double> p = particle_class_selection_prob(particle_distributions, volume_fractions);
-	std::discrete_distribution<size_t> d(p.begin(), p.end());
-	
-	for (size_t ix = 0; ix < n_particles; ix++) {
-		// Randomly selects particle class and related volume distribution 
-		ParticleDistribution pd = particle_distributions.at(d(mt));
-		std::function<double(void)> volume_sampler = get_sampler(pd.volume_distribution, mt);
-
-		// Extracts reference particle parameters
-		Superellipsoid p = pd.reference_particle;
-		int cls = p.get_class();
-		double scale_params[3] = {p.get_scale("a"), p.get_scale("b"), p.get_scale("c")};
-		double shape_params[2] = {p.get_shape("n1"), p.get_shape("n2")};
-	
-		// Generates the new particle and adds it to particles vector 
-		Superellipsoid* new_p = new Superellipsoid(cls, scale_params, shape_params);
-		new_p->set_orientation(random_quaternion(mt));
-		new_p->scale_to_volume(volume_sampler());
-		particles->at(ix) = new_p;
-	}
-
-	return particles;
-}
-
-Distribution parse_distribution(std::string distr_string) {
+Distribution parse_distribution(const std::string& distr_string) {
 	int open_bracket_idx = distr_string.find("(");
 	std::string distr_name = distr_string.substr(0, open_bracket_idx);
 	std::string param_string = distr_string.substr(open_bracket_idx + 1, distr_string.size() - open_bracket_idx - 2);
@@ -127,9 +74,14 @@ Distribution parse_distribution(std::string distr_string) {
 		int comma_idx = param_string.find(",");
 		double lower_bound = std::stod(param_string.substr(0, comma_idx));
 		double upper_bound = std::stod(param_string.substr(comma_idx + 1));
-		
+
+		// Making sure distribution arguments make sense
+		if (lower_bound > upper_bound) {
+			throw std::invalid_argument("[ERROR]: first argument must be smaller than second argument in uniform distribution.");
+		}
+
 		param_vec.push_back(lower_bound);
-		param_vec.push_back(lower_bound);
+		param_vec.push_back(upper_bound);
 
 	} else if (distr_name == "normal") {
 		int comma_idx = param_string.find(",");
@@ -147,6 +99,14 @@ Distribution parse_distribution(std::string distr_string) {
 		param_vec.push_back(mu);
 		param_vec.push_back(sigma);
 
+	} else if (distr_name == "weibull") {
+		// Our representation is on the form weibull(k, lambda)
+		int comma_idx = param_string.find(",");
+		double k = std::stod(param_string.substr(0, comma_idx)); // shape parameter 
+		double lambda = std::stod(param_string.substr(comma_idx + 1)); // scale parameter
+			
+		param_vec.push_back(k);
+		param_vec.push_back(lambda);
 	} else {
 		throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");
 	}
@@ -157,13 +117,11 @@ Distribution parse_distribution(std::string distr_string) {
 	return parsed_distr;
 }
 
-std::vector<int> expected_particles_needed(const std::vector<ParticleDistribution>& particle_distributions, 
-										   const std::vector<double>& target_volume_fractions,
-										   double domain_volume) {
-	std::vector<int> n(particle_distributions.size());
+std::vector<int> expected_particles_needed(const std::vector<Component>& components, const double domain_volume) {
+	std::vector<int> n(components.size());
 	for (size_t ix = 0; ix < n.size(); ix++) {
-		Distribution d = particle_distributions.at(ix).volume_distribution;
-		double eta = target_volume_fractions.at(ix);
+		Distribution d = components.at(ix).volume_distribution;
+		double eta = components.at(ix).target_volume_fraction;
 
 		n.at(ix) = eta*domain_volume/mean(d);
 	}
@@ -171,18 +129,16 @@ std::vector<int> expected_particles_needed(const std::vector<ParticleDistributio
 	return n;
 }
 
-std::vector<double> particle_class_selection_prob(const std::vector<ParticleDistribution>& particle_distributions,
-												  const std::vector<double>& target_volume_fractions) {
-	std::vector<double> p(particle_distributions.size());
+std::vector<double> particle_class_selection_prob(const std::vector<Component>& components,
+												  const double domain_volume,
+												  const size_t n_particles) {
+	std::vector<double> p(components.size());
 	
-	double mean_sum = 0;
 	for (size_t ix = 0; ix < p.size(); ix++) {
-		mean_sum += mean(particle_distributions.at(ix).volume_distribution);
-	}
+		double f = components.at(ix).target_volume_fraction;
+		Distribution vol_d = components.at(ix).volume_distribution;
 
-	for (size_t ix = 0; ix < p.size(); ix++) {
-		double mu = mean(particle_distributions.at(ix).volume_distribution);
-		p.at(ix) = mu/mean_sum; 
+		p.at(ix) = domain_volume * f /(n_particles * mean(vol_d));
 	}
 
 	return p;
@@ -192,7 +148,7 @@ double mean(const Distribution& d) {
 	if (d.name == "uniform") {
 		double lb = d.args.at(0); 
 		double ub = d.args.at(1);
-		return (ub - lb)/2;
+		return (lb + ub)/2;
 	} else if (d.name == "normal") {
 		return d.args.at(0); // mu is at first index in vector
 	} else if (d.name == "log-normal") {
@@ -200,6 +156,11 @@ double mean(const Distribution& d) {
 		double mu = d.args.at(0);
 		double sigma = d.args.at(1);
 		return std::exp(mu + sigma*sigma/2);
+	} else if (d.name == "weibull") {
+		// Our representation is on the form weibull(k, lambda)
+		double k = d.args.at(0);
+		double lambda = d.args.at(1);
+		return lambda * std::tgamma(1 + 1/k);
 	} else {
 		throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");
 	}
@@ -219,6 +180,10 @@ std::function<double(void)> get_sampler(const Distribution& d, std::mt19937& mt)
 	} else if (d.name == "log-normal") {
 		std::lognormal_distribution<double> sampler(d.args.at(0), d.args.at(1));
 		return [sampler, &mt]()mutable{return sampler(mt);};
+	} else if (d.name == "weibull") {
+		// Our representation is on the form weibull(k, lambda)
+		std::weibull_distribution<double> sampler(d.args.at(0), d.args.at(1));
+		return [sampler, &mt]()mutable{return sampler(mt);};
 	} else {
 		throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");
 	}
@@ -237,6 +202,3 @@ Eigen::Quaternion<double> random_quaternion(std::mt19937& mt) {
 
 	return q;
 }
-
-
-

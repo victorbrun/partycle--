@@ -6,9 +6,6 @@
 #include <tuple>
 #include <random>
 
-
-
-
 bool check_collision(Superellipsoid* p1, Superellipsoid* p2) {
 	Eigen::Vector3d c1 = p1->get_center();
 	Eigen::Vector3d c2 = p2->get_center();
@@ -56,7 +53,7 @@ void Domain::add_particle_af(Superellipsoid* p) {
 }
 
 std::vector<Superellipsoid*> Domain::particles_in_subdomain(double x_range[2], double y_range[2], double z_range[2]) {
-	return this->particles.particles_in_domain(x_range, y_range, z_range);
+	return this->particles->particles_in_domain(x_range, y_range, z_range);
 }
 
 void Domain::initialise_outward_advancing_front(Superellipsoid* particles[4]) {
@@ -112,7 +109,7 @@ void Domain::initialise_outward_advancing_front(Superellipsoid* particles[4]) {
 
 void Domain::increment_advancing_front(Superellipsoid* p) {
 	std::vector<Superellipsoid*> af = this->advancing_front;
-	int sz = af->size();
+	int sz = af.size();
 	if (sz == 0) {
 		return; 
 	}
@@ -126,9 +123,9 @@ void Domain::increment_advancing_front(Superellipsoid* p) {
 	
 	
 	// Get number of contacts for p_ref
-	int no_nonzeros = p_ref.get_contacts().size()
+	int no_nonzeros = p_ref->get_contacts().size();
 
-	bool All_fails = true;  // Default to true, update if success
+	bool all_fails = true;  // Default to true, update if success
 	bool cc; // Tracks collisions
 	// Test all combinations of neighbour pairs, given that we have at least 2 contacts
 	// Running binary approach. If successfull we do not try any other pair.
@@ -137,9 +134,9 @@ void Domain::increment_advancing_front(Superellipsoid* p) {
 	//  advancing front.
 	if (no_nonzeros >= 2) {
 		for (int ix = 0;  ix < no_nonzeros-1; ix++) {
-			Superellipsoid* p1 = af->at(ix);
+			Superellipsoid* p1 = af.at(ix);
 			for (int jx = ix + 1; jx < no_nonzeros; jx++) {
-				Superellipsoid* p2 = af->at(jx);
+				Superellipsoid* p2 = af.at(jx);
 				
 				std::vector<Superellipsoid*> particles; 
 				particles.push_back(p_ref);
@@ -164,7 +161,7 @@ void Domain::increment_advancing_front(Superellipsoid* p) {
 					particles[2]->add_contact(p);
 
 					//
-					All_fails = false; 
+					all_fails = false; 
 					break;
 				} else {
 					// Binary approach failed:  
@@ -176,7 +173,7 @@ void Domain::increment_advancing_front(Superellipsoid* p) {
 			}
 		}
 	}
-	if (All_fails) {
+	if (all_fails) {
 		// All possible particle assemblies failed: 
 		this->remove_particle_af(p);
 
@@ -189,7 +186,6 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 	Superellipsoid* fp2 = fixed_particles.at(1);
 	Superellipsoid* fp3 = fixed_particles.at(2);
 
-	Eigen::Vector3d c_mp = mobile_particle->get_center();
 	double R1 = mobile_particle->circumscribed_sphere_radius();
 	//double r1 = mobile_particle->inscribed_sphere_radius();
 
@@ -324,7 +320,6 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 
 		// Update iterations
 		iterations++; 
-
 	}	
 	
 	std::cout << "[INFO]: relocated particle " << relocation_counter << " times." << std::endl;
@@ -342,7 +337,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
-	this->particles = CoordinateIndexer();
+	this->particles = new CoordinateIndexer();
 }
 
 Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, int n_particles) {
@@ -354,7 +349,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
-	this->particles = CoordinateIndexer(n_particles);
+	this->particles = new CoordinateIndexer(n_particles);
 }
 
 Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, std::vector<Superellipsoid*>* particles) {
@@ -366,13 +361,18 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->z_bounds[0] = z_range[0];
 	this->z_bounds[1] = z_range[1];
 
-	this->particles = CoordinateIndexer(particles);
+	this->particles = new CoordinateIndexer(particles);
 }
 
-int Domain::n_particles() { return this->particles.n_particles(); }
+Domain::~Domain() {
+	std::cout << "[INFO]: destroying domain instance" << std::endl;
+	delete particles;
+}
+	
+int Domain::n_particles() { return this->particles->n_particles(); }
 
 void Domain::add_particle(Superellipsoid* p) {
-	this->particles.add_particle(p);
+	this->particles->add_particle(p);
 	
 	double r = p->circumscribed_sphere_radius();
 	if (r > this->larges_circumscribing_sphere_radius) larges_circumscribing_sphere_radius = r; 

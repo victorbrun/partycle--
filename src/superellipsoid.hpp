@@ -1,12 +1,14 @@
 #ifndef SUPERELLIPSOID_H
 #define SUPERELLIPSOID_H
 
+#include <vector>
 #include <string>
 #include <eigen3/Eigen/Dense>
 
+
 class Superellipsoid {
 	private:
-		int 						cls;
+		int 						component_id;
 		Eigen::Vector3d 			c;
 		double 						scale[3];
 		double 						shape[2];
@@ -29,10 +31,10 @@ class Superellipsoid {
 		Superellipsoid(int cls, double scale_params[3], double shape_params[2]);
 
 		// Returns class of Superellipsoid.
-		int get_class();
+		int get_component_id();
 
 		// Get contacts of particle
-		std::vector<Superellipsoid*> get_contacts(Superellipsoid* p); 
+		std::vector<Superellipsoid*> get_contacts(); 
 		// Returns center of Superellipsoid
 		Eigen::Vector3d get_center();
 

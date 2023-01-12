@@ -19,10 +19,12 @@ if(NOT matplotplusplus_POPULATED)
     add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-
 # Compiler setting 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
+# Adds inlcude directory
+#incldue_directories(include)
 
 # Binary location
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
@@ -38,6 +40,12 @@ endif()
 # Setting up executable
 set(SOURCES 
 	src/main.cpp 
+
+	src/program_options.cpp
+	src/program_options.hpp
+
+	src/utils.cpp
+	src/utils.hpp
 
 	src/superellipsoid.cpp  
 	src/superellipsoid.hpp 

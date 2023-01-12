@@ -32,11 +32,11 @@ void Superellipsoid::set_scale(std::string param_name, double val) {
 
 /***** Public *****/
 
-Superellipsoid::Superellipsoid(int cls, double scale_params[3], double shape_params[2]) {
+Superellipsoid::Superellipsoid(int component_id, double scale_params[3], double shape_params[2]) {
 	double n1 = shape_params[0];
 	double n2 = shape_params[1];
 	if (n1 < 2 || n2 < 2) {
-		throw std::invalid_argument("ERROR: n1 and n2 must be larger or equal to 2 to ensure that superellipsoid surface is two times differentiable");
+		throw std::invalid_argument("[ERROR]: n1 and n2 must be larger or equal to 2 to ensure that superellipsoid surface is two times differentiable");
 	}
 	this->shape[0] = n1;
 	this->shape[1] = n2;
@@ -48,15 +48,15 @@ Superellipsoid::Superellipsoid(int cls, double scale_params[3], double shape_par
 	this->scale[1] = b;
 	this->scale[2] = c;
 		
-	this->cls = cls;
+	this->component_id = component_id;
 }
 
-int Superellipsoid::get_class()  { return this->cls; }
-std::vector<Superellipsoid*> get_contacts(Superellipsoid* p){return p->contacts; }
+int Superellipsoid::get_component_id()  { return this->component_id; }
+std::vector<Superellipsoid*> Superellipsoid::get_contacts(){ return this->contacts; }
 Eigen::Vector3d Superellipsoid::get_center()  { return this->c; }
 Eigen::Quaternion<double> Superellipsoid::get_orientation()  { return this->q; }
 
-void Superellipsoid::add_contact(Superellipsoid* p){this->contacts.push_back(p);}
+void Superellipsoid::add_contact(Superellipsoid* p){ this->contacts.push_back(p); }
 
 double Superellipsoid::get_scale(std::string param_name) {
 	if (param_name == "a") {
@@ -66,7 +66,7 @@ double Superellipsoid::get_scale(std::string param_name) {
 	} else if (param_name == "c") {
 		return scale[2];
 	} else {
-		throw std::invalid_argument("ERROR: get_scale accepts param_name: \"a\", \"b\", \"c\"");
+		throw std::invalid_argument("[ERROR]: get_scale accepts param_name: \"a\", \"b\", \"c\"");
 	}
 }
 

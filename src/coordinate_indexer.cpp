@@ -48,12 +48,18 @@ std::vector<int> CoordinateIndexer::intersect(std::vector<int>& v1, std::vector<
 CoordinateIndexer::CoordinateIndexer() {}
 
 CoordinateIndexer::CoordinateIndexer(int n_particles) {
-	this->particles = new std::vector<Superellipsoid*>(n_particles);
+	this->particles = new std::vector<Superellipsoid*>;
+	this->particles->reserve(n_particles);
 
 	// Initiates the index vectors which will be n_particles large eventually
 	this->particles_idx_x_sorted = new std::vector<int>;
 	this->particles_idx_y_sorted = new std::vector<int>;
 	this->particles_idx_z_sorted = new std::vector<int>;
+
+	// Reserves space for vectors to make it faster to add entries to them.
+	this->particles_idx_x_sorted->reserve(n_particles);
+	this->particles_idx_y_sorted->reserve(n_particles);
+	this->particles_idx_z_sorted->reserve(n_particles);
 }
 
 CoordinateIndexer::CoordinateIndexer(std::vector<Superellipsoid*>* particles) {
@@ -88,6 +94,13 @@ CoordinateIndexer::CoordinateIndexer(std::vector<Superellipsoid*>* particles) {
 			});	
 }
 
+CoordinateIndexer::~CoordinateIndexer() {
+	std::cout << "[INFO]: destroying CoordinateIndexer instance" << std::endl;
+	delete this->particles_idx_x_sorted;
+	delete this->particles_idx_y_sorted;
+	delete this->particles_idx_z_sorted;
+}
+
 void CoordinateIndexer::add_particle(Superellipsoid* p) {
 	// The particles vector has no ordering so we just append
 	this->particles->push_back(p);
@@ -110,13 +123,6 @@ void CoordinateIndexer::add_particle(Superellipsoid* p) {
 	particles_idx_x_sorted->insert(this->particles_idx_x_sorted->begin() + x_insert_idx, new_idx);
 	particles_idx_y_sorted->insert(this->particles_idx_y_sorted->begin() + y_insert_idx, new_idx);
 	particles_idx_z_sorted->insert(this->particles_idx_z_sorted->begin() + z_insert_idx, new_idx);
-}
-
-void CoordinateIndexer::destroy() {
-	delete [] this->particles;
-	delete [] this->particles_idx_x_sorted;
-	delete [] this->particles_idx_y_sorted;
-	delete [] this->particles_idx_z_sorted;
 }
 
 int CoordinateIndexer::n_particles() { 
@@ -158,7 +164,7 @@ std::vector<Superellipsoid*> CoordinateIndexer::particles_in_domain(double x_ran
 	std::vector<int> xyz_particle_idx = this->intersect(xy_particle_idx, z_particle_idx);
 
 	std::vector<Superellipsoid*> result(xyz_particle_idx.size());
-	for (int ix = 0; ix < int(result.size()); ix++) {
+	for (size_t ix = 0; ix < result.size(); ix++) {
 		int idx = xyz_particle_idx.at(ix);
 		result.at(ix) = this->particles->at(idx);	
 	}
