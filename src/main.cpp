@@ -100,6 +100,7 @@ int main(int argc, char* argv[]) {
 	
 	Superellipsoid* initial_particles[4] = {particles->at(0), particles->at(1), particles->at(2), particles->at(3)};
 	domain.initialise_outward_advancing_front(initial_particles);
+	domain.draw(20);
 
 	// TODO: double check that the target volume fractions are achieved after the change ParticleDistribution -> Component
 	// TODO: fill the domain using advancing front!!

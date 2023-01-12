@@ -62,13 +62,11 @@ class Domain {
 		// Destructor
 		~Domain();
 
-		/** 
-		 * Reserves space for n_particles. Ought to be used when you need domain
-		 * volume in order to compute the number of particles if will be filled with.
-		 */
-		void reserve_particle_space(int n_particles);
-
+		// Returns the number of particles currently in the domain 
 		int n_particles(void);
+
+		// Returns the the particles in the domain 
+		std::vector<Superellipsoid*>* get_particles();
 		
 		// Adds `p` to the domain
 		void add_particle(Superellipsoid* p);

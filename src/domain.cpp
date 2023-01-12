@@ -1,5 +1,7 @@
 #include "domain.hpp"
 #include "superellipsoid.hpp"
+#include "matplotlibcpp.h"
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -320,6 +322,8 @@ Domain::~Domain() {
 	
 int Domain::n_particles() { return this->particles->n_particles(); }
 
+std::vector<Superellipsoid*>* Domain::get_particles() { return this->particles->get_particles(); }
+
 void Domain::add_particle(Superellipsoid* p) {
 	this->particles->add_particle(p);
 	
@@ -416,4 +420,43 @@ void Domain::initialise_outward_advancing_front(Superellipsoid* particles[4]) {
 			break;
 		}
 	}
+}
+
+void Domain::draw(int resolution){
+	//Generate linspace for eta and omega
+	Eigen::VectorXd eta, omega; 
+	eta.setLinSpaced(resolution, -M_PI/2, M_PI/2);
+	omega.setLinSpaced(resolution, -M_PI, M_PI);
+
+	//Generate mesh
+	Eigen::MatrixXd ETA = eta.rowwise().replicate(resolution).transpose();
+	Eigen::MatrixXd OMEGA = omega.rowwise().replicate(resolution);
+
+	//Generate surface plot points
+	std::vector<double> f(resolution);
+	std::vector<std::vector<double>> X(resolution, f), Y(resolution, f), Z(resolution, f);
+	
+	//Collect all particles
+	std::vector<Superellipsoid*>* particles = this->get_particles();
+
+	//Plotting configs
+	namespace plt = matplotlibcpp;
+	plt::figure(1);
+
+	//Cmap args: 'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds'
+	//Todo: plot surface based on not yet implemented class for particle
+	std::map<std::string, std::string> keywords = {
+		{"cmap", "Greens"}
+	};
+
+	//Iterate and plot
+	for (int ix = 0; ix < this->n_particles(); ix++){
+		//Collect mesh points and surfaceplot		
+		std::tie(X, Y, Z) = particles->at(ix)->parametric_surface(ETA, OMEGA);
+		std::cout << "here" << std::endl;
+		plt::plot_surface(X, Y, Z, keywords, 1);
+	}
+	
+	plt::show();
+	//plt::save("images.png");
 }

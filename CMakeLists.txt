@@ -5,19 +5,9 @@
 cmake_minimum_required(VERSION 3.15)
 project(Partycle-- VERSION 0.0.1)
 
-# Includes
-include(FetchContent)
-
-# Fetches Matplot++
-FetchContent_Declare(matplotplusplus
-        GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
-        GIT_TAG origin/master) # or whatever tag you want
-
-FetchContent_GetProperties(matplotplusplus)
-if(NOT matplotplusplus_POPULATED)
-    FetchContent_Populate(matplotplusplus)
-    add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
+#Include Matplotlibcpp and dependencies
+find_package(Python3 COMPONENTS Interpreter Development NumPy)
+include_directories(${Python3_INCLUDE_DIRS} include)
 
 # Compiler setting 
 set(CMAKE_CXX_STANDARD 20)
@@ -61,4 +51,5 @@ set(SOURCES
 )
 add_executable(partycle-- ${SOURCES})
 
-target_link_libraries(partycle-- PUBLIC matplot)
+#Matplotlibcpp linker
+target_link_libraries(partycle-- PUBLIC ${Python3_LIBRARIES})
