@@ -40,16 +40,6 @@ class Domain {
 		void add_particle_af(Superellipsoid* p);
 
 		/**
-		 * Initialises the an outward going advancing front by placing the 
-		 * four particles in `particles` in the corners of a tetrahedron with center in 
-		 * the domains midpoint. The superellipsoids in `particles` may not be present
-		 * in domain or advancing_front since they will be added there-too by this function.
-		 *
-		 * @param `particles`: four pointers to superellipsoids. Center of the superellipsoids will be changed.
-		 */
-		void initialise_outward_advancing_front(Superellipsoid* particles[4]);
-
-		/**
 		 * Returns array of particles whose center lie in the domain defined by `x_range`x`y_range`x`z_range`.
 		 *
 		 * @param `x_range`: array of 2 doubles defining x-axis range. Smallest value is at index 0 and larges is at index 1.
@@ -83,7 +73,15 @@ class Domain {
 		// Adds `p` to the domain
 		void add_particle(Superellipsoid* p);
 		
-		void initialise_advancing_front(std::string direction, std::vector<Superellipsoid*> particles);
+		/**
+		 * Initialises the an outward going advancing front by placing the 
+		 * four particles in `particles` in the corners of a tetrahedron with center in 
+		 * the domains midpoint. The superellipsoids in `particles` may not be present
+		 * in domain or advancing_front since they will be added there-too by this function.
+		 *
+		 * @param `particles`: four pointers to superellipsoids. Center of the superellipsoids will be changed.
+		 */
+		void initialise_outward_advancing_front(Superellipsoid* particles[4]);
 
 		// Introduces the given particle into the domain and increments the advancing front accordingly.
 		void increment_advancing_front(Superellipsoid* p);

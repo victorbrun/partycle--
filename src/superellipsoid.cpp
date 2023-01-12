@@ -196,6 +196,7 @@ void Superellipsoid::scale_to_volume(double vol) {
 	this->set_scale("b", b*scale_factor);
 	this->set_scale("c", c*scale_factor);
 }
+
 Eigen::Vector2d Superellipsoid::constraints(Superellipsoid* p1, Superellipsoid* p2, Eigen::Vector4d& Z, double ax[3], double ay[3], double ex[2], double ey[2]) {
 	
 	std::vector<int> ind{0, 1, 2};
@@ -218,6 +219,7 @@ Eigen::Vector2d Superellipsoid::constraints(Superellipsoid* p1, Superellipsoid* 
 
 	return H;
 }
+
 Eigen::Matrix4d Superellipsoid::J_matrix(Superellipsoid* p1, Superellipsoid* p2, Eigen::Vector4d& Z, double ax[3], double ay[3], double ex[2], double ey[2]) {
 	
 	// Input :
@@ -278,6 +280,7 @@ Eigen::Matrix4d Superellipsoid::J_matrix(Superellipsoid* p1, Superellipsoid* p2,
 
     return J;
 }
+
 Eigen::Vector4d Superellipsoid::phi(Superellipsoid* p1, Superellipsoid* p2, Eigen::Vector4d &Z, double ax[3], double ay[3], double ex[2], double ey[2]) {
 
 	// Input :	Z : [X, mu]

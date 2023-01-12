@@ -56,57 +56,6 @@ std::vector<Superellipsoid*> Domain::particles_in_subdomain(double x_range[2], d
 	return this->particles->particles_in_domain(x_range, y_range, z_range);
 }
 
-void Domain::initialise_outward_advancing_front(Superellipsoid* particles[4]) {
-	double x_mid = (this->x_bounds[0] + this->x_bounds[1])/2;
-	double y_mid = (this->x_bounds[0] + this->x_bounds[1])/2;
-	double z_mid = (this->x_bounds[0] + this->x_bounds[1])/2;
-	Eigen::Vector3d domain_center(x_mid, y_mid, z_mid);
-	
-	// Setting up variables to make it easy to set centers of particles
-	double r_max = 0;
-	for (int ix = 0; ix < 4; ix++) {
-		double r = particles[ix] -> circumscribed_sphere_radius();
-		if (r_max < r) r_max = r; 
-	}
-	Eigen::Vector3d p1_local_center(r_max, 0, -r_max/std::sqrt(2));
-	Eigen::Vector3d p2_local_center(-r_max, 0, -r_max/std::sqrt(2));
-	Eigen::Vector3d p3_local_center(0, r_max, r_max/std::sqrt(2));
-	Eigen::Vector3d p4_local_center(0, -r_max, r_max/std::sqrt(2));
-
-	// Setting centers of particles and adds them to domain and af 
-	particles[0]->set_center(p1_local_center + domain_center);
-	this->add_particle(particles[0]);
-	this->add_particle_af(particles[0]);
-	particles[1]->set_center(p2_local_center + domain_center);
-	this->add_particle(particles[1]);
-	this->add_particle_af(particles[1]);
-	particles[2]->set_center(p3_local_center + domain_center);
-	this->add_particle(particles[2]);
-	this->add_particle_af(particles[2]);
-	particles[3]->set_center(p4_local_center + domain_center);
-	this->add_particle(particles[3]);
-	this->add_particle_af(particles[3]);
-
-	// Add the particles to each others contact lists
-	particles[0]->add_contact(particles[1]);
-	particles[0]->add_contact(particles[2]);
-	particles[0]->add_contact(particles[3]);
-
-	particles[1]->add_contact(particles[0]);
-	particles[1]->add_contact(particles[2]);
-	particles[1]->add_contact(particles[3]);
-
-	particles[2]->add_contact(particles[0]);
-	particles[2]->add_contact(particles[1]);
-	particles[2]->add_contact(particles[3]);
-
-	particles[3]->add_contact(particles[0]);
-	particles[3]->add_contact(particles[1]);
-	particles[3]->add_contact(particles[2]);
-	// Todo: move the particles into close contact while keeping their shared center constant
-	
-}
-
 void Domain::increment_advancing_front(Superellipsoid* p) {
 	std::vector<Superellipsoid*> af = this->advancing_front;
 	int sz = af.size();
@@ -116,9 +65,9 @@ void Domain::increment_advancing_front(Superellipsoid* p) {
 
 	// Draw a reference particle
 	std::random_device rd; 
-    std::mt19937 rng(rd()); 
+    std::mt19937 mt(rd()); 
     std::uniform_int_distribution<> uni(0, sz);
-	int idx = uni(rng);
+	int idx = uni(mt);
 	Superellipsoid* p_ref = af[idx];
 	
 	
@@ -386,4 +335,85 @@ double Domain::volume(void) {
 	return x_len * y_len * z_len;
 }
 
+void Domain::initialise_outward_advancing_front(Superellipsoid* particles[4]) {
+	double x_mid = (this->x_bounds[0] + this->x_bounds[1])/2;
+	double y_mid = (this->x_bounds[0] + this->x_bounds[1])/2;
+	double z_mid = (this->x_bounds[0] + this->x_bounds[1])/2;
+	Eigen::Vector3d domain_center(x_mid, y_mid, z_mid);
+	
+	// Setting up variables to make it easy to set centers of particles
+	// so that they are placed in the corners of a tetrahedron.
+	double r_max = 0;
+	for (int ix = 0; ix < 4; ix++) {
+		double r = particles[ix] -> circumscribed_sphere_radius();
+		if (r_max < r) r_max = r; 
+	}
+	Eigen::Vector3d p1_local_center(r_max, 0, -r_max/std::sqrt(2));
+	Eigen::Vector3d p2_local_center(-r_max, 0, -r_max/std::sqrt(2));
+	Eigen::Vector3d p3_local_center(0, r_max, r_max/std::sqrt(2));
+	Eigen::Vector3d p4_local_center(0, -r_max, r_max/std::sqrt(2));
 
+	// Setting centers of particles and adds them to domain and af 
+	particles[0]->set_center(p1_local_center + domain_center);
+	this->add_particle(particles[0]);
+	this->add_particle_af(particles[0]);
+	particles[1]->set_center(p2_local_center + domain_center);
+	this->add_particle(particles[1]);
+	this->add_particle_af(particles[1]);
+	particles[2]->set_center(p3_local_center + domain_center);
+	this->add_particle(particles[2]);
+	this->add_particle_af(particles[2]);
+	particles[3]->set_center(p4_local_center + domain_center);
+	this->add_particle(particles[3]);
+	this->add_particle_af(particles[3]);
+
+	// Add the particles to each others contact lists
+	particles[0]->add_contact(particles[1]);
+	particles[0]->add_contact(particles[2]);
+	particles[0]->add_contact(particles[3]);
+
+	particles[1]->add_contact(particles[0]);
+	particles[1]->add_contact(particles[2]);
+	particles[1]->add_contact(particles[3]);
+
+	particles[2]->add_contact(particles[0]);
+	particles[2]->add_contact(particles[1]);
+	particles[2]->add_contact(particles[3]);
+
+	particles[3]->add_contact(particles[0]);
+	particles[3]->add_contact(particles[1]);
+	particles[3]->add_contact(particles[2]);
+	
+	// All of the particles closer and closer to shared centrum until at least one pair is 
+	// touching. This could be done faster by utilising binary approach but it does not 
+	// really fit the written binary approach.
+	double center_distance = r_max * std::sqrt(3/2); // Distance for each partile to center of tetrahedron
+	double step_size = 0.01 * r_max;
+	Eigen::Vector3d c1 = particles[0]->get_center();
+	Eigen::Vector3d c2 = particles[1]->get_center();
+	Eigen::Vector3d c3 = particles[2]->get_center();
+	Eigen::Vector3d c4 = particles[3]->get_center();
+	for (double offset = 0; offset < center_distance; offset += step_size) {
+
+		// Decrements each particles distance to the shared centrum.
+		particles[0]->set_center(c1 - p1_local_center*offset);
+		particles[1]->set_center(c2 - p2_local_center*offset);
+		particles[2]->set_center(c3 - p3_local_center*offset);
+		particles[3]->set_center(c4 - p4_local_center*offset);
+
+		// Checks if any of the particles are colliding,
+		// if so we take a step back and break the loop,
+		// otherwise we keep moving the particles forward.
+		bool collision = check_collision(particles[0], particles[1]) || check_collision(particles[0], particles[2]) ||
+						 check_collision(particles[0], particles[3]) || check_collision(particles[1], particles[2]) ||
+						 check_collision(particles[1], particles[3]) || check_collision(particles[2], particles[3]);
+		if (collision) {
+			// Steps the particles back one step since we know that they do not touch there
+			particles[0]->set_center(c1 - p1_local_center * (offset-step_size));
+			particles[1]->set_center(c2 - p2_local_center * (offset-step_size));
+			particles[2]->set_center(c3 - p3_local_center * (offset-step_size));
+			particles[3]->set_center(c4 - p4_local_center * (offset-step_size));
+			break;
+		}
+	}
+}

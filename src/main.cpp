@@ -4,6 +4,7 @@
 #include "utils.hpp"
 #include "domain.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <numeric>
 #include <random>
@@ -81,29 +82,24 @@ int main(int argc, char* argv[]) {
 
 	// Generates particles acocrding to the specification given in component-file
 	std::vector<Superellipsoid*>* particles = generate_random_particles(components, domain_vol);
-	std::cout << "[INFO]: generating " << particles->size() << " particles.." << std::endl;
+	std::cout << "[INFO]: " << particles->size() << " particles generated" << std::endl;
 
+	// Shuffles the particles so that by iterating over the vector 
+	// will be the same as randomly selecting a component and generating 
+	// a particle according to it. 
+	// TODO: check that this argument of shuffling pre-generated particles is equiv. to that of randomly sampling
+	// component and then generating particle.
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::shuffle(particles->begin(), particles->end(), mt);
+	
 	// Initialises domain. This is done here and not where its bounds are defined since we want to 
 	// specify the number of particles we are going to add to it. This will make the domain pre-allocate
 	// memory.
 	Domain domain = Domain(x_range, y_range, z_range, contact_tol, particles->size());
 	
-	std::random_device rd;
-	std::mt19937 mt(rd());
-	std::uniform_real_distribution<double> x(x_range[0], x_range[1]);
-	std::uniform_real_distribution<double> y(y_range[0], y_range[1]);
-	std::uniform_real_distribution<double> z(z_range[0], z_range[1]);
-
-	// Places particles randomly in domain to test
-	std::cout << "[INFO]: randomly places particles in domain" << std::endl;
-	for (size_t ix = 0; ix < particles->size(); ix++) {
-		Superellipsoid* p = particles->at(ix);
-
-		Eigen::Vector3d center(x(mt), y(mt), z(mt));
-		p->set_center(center);
-		domain.add_particle(p);
-	}
-
+	Superellipsoid* initial_particles[4] = {particles->at(0), particles->at(1), particles->at(2), particles->at(3)};
+	domain.initialise_outward_advancing_front(initial_particles);
 
 	// TODO: double check that the target volume fractions are achieved after the change ParticleDistribution -> Component
 	// TODO: fill the domain using advancing front!!
