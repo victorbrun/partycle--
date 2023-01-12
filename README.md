@@ -36,4 +36,4 @@ To specify the volume distribution for a component, a string on the form `<distr
 | uniform(a,b)         | `a` and `b` defines the interval [a,b] on which is the distributions support. | uniform(1,9.9) |
 | normal(mu,sigma)     | `mu` is the expectation of a random variable with this distribution. `sigma` is the variance of a random variable with this distribution. | normal(2.5,0.25) |
 | log-normal(mu,sigma) | `mu` is the expectation of the logarithm of a random variable with this distribution. `sigma` is the variance of the logarithm of a random variable with this distribution. | log-normal(1,0.25) |
-| weibull(k, lambda)   | `k` is the shape parameter. `lambda` is the scale parameter. | |
+| weibull(k, lambda)   | `k` is the shape parameter. `lambda` is the scale parameter. | weibull(0,0.25) |
