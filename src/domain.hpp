@@ -21,7 +21,7 @@ class Domain {
 
 		// Neighbouring particles stuff
 		double contact_tol; // if |distance(p1,p2)| <= contact_tol p1 and p2 are considered to be in contact 
-		Eigen::SparseMatrix<int> contact_matrix; 
+		
 
 		// Up to date record of sphere radius which is guranteed to enclose all particles in domain 
 		double larges_circumscribing_sphere_radius;
@@ -48,20 +48,6 @@ class Domain {
 		 * @param `particles`: four pointers to superellipsoids. Center of the superellipsoids will be changed.
 		 */
 		void initialise_outward_advancing_front(Superellipsoid* particles[4]);
-
-		/**
-		 * Performes binary approach moving `mobile_particle` as close to the average of the centers of `fixed_particles`
-		 * without overlapping any particle. The function returns an int specifying the exit state.
-		 *
-		 * @param `fixed_particles`: array of three pointers to Superellipsoids.
-		 * @param `mobile_particle`: pointer to particle which is moved.
-		 * @return 
-		 * 		0: success: distance between mobile particle and any fixed particle < tol.
-		 * 		1: --
-		 * 		2: --
-		 * 		3: --
-		 */
-		int binary_approach(Superellipsoid* fixed_particles[3], Superellipsoid* mobile_particle);
 
 		/**
 		 * Returns array of particles whose center lie in the domain defined by `x_range`x`y_range`x`z_range`.
@@ -98,6 +84,20 @@ class Domain {
 
 		// Introduces the given particle into the domain and increments the advancing front accordingly.
 		void increment_advancing_front(Superellipsoid* p);
+
+		/**
+		 * Performes binary approach moving `mobile_particle` as close to the average of the centers of `fixed_particles`
+		 * without overlapping any particle. The function returns an int specifying the exit state.
+		 *
+		 * @param `fixed_particles`: array of three pointers to Superellipsoids.
+		 * @param `mobile_particle`: pointer to particle which is moved.
+		 * @return 
+		 * 		0: success: distance between mobile particle and any fixed particle < tol.
+		 * 		1: --
+		 * 		2: --
+		 * 		3: --
+		 */
+		int binary_approach(std::vector<Superellipsoid*> fixed_particles, Superellipsoid* mobile_particle);
 
 		// Returns the volume of the domain
 		double volume(void);

@@ -52,8 +52,11 @@ Superellipsoid::Superellipsoid(int cls, double scale_params[3], double shape_par
 }
 
 int Superellipsoid::get_class()  { return this->cls; }
+std::vector<Superellipsoid*> get_contacts(Superellipsoid* p){return p->contacts; }
 Eigen::Vector3d Superellipsoid::get_center()  { return this->c; }
 Eigen::Quaternion<double> Superellipsoid::get_orientation()  { return this->q; }
+
+void Superellipsoid::add_contact(Superellipsoid* p){this->contacts.push_back(p);}
 
 double Superellipsoid::get_scale(std::string param_name) {
 	if (param_name == "a") {
@@ -193,16 +196,16 @@ void Superellipsoid::scale_to_volume(double vol) {
 	this->set_scale("b", b*scale_factor);
 	this->set_scale("c", c*scale_factor);
 }
-Eigen::Vector2d Superellipsoid::constraints(Superellipsoid& p1, Superellipsoid& p2, Eigen::Vector4d& Z, double ax[3], double ay[3], double ex[2], double ey[2]) {
+Eigen::Vector2d Superellipsoid::constraints(Superellipsoid* p1, Superellipsoid* p2, Eigen::Vector4d& Z, double ax[3], double ay[3], double ex[2], double ey[2]) {
 	
 	std::vector<int> ind{0, 1, 2};
 	Eigen::Vector3d X = Z(ind);
 
 	// Particle parameters
-	Eigen::Matrix3d Rx = p1.get_orientation().toRotationMatrix();
-	Eigen::Matrix3d Ry = p2.get_orientation().toRotationMatrix();
-	Eigen::Vector3d cx = p1.get_center();
-	Eigen::Vector3d cy = p2.get_center();
+	Eigen::Matrix3d Rx = p1->get_orientation().toRotationMatrix();
+	Eigen::Matrix3d Ry = p2->get_orientation().toRotationMatrix();
+	Eigen::Vector3d cx = p1->get_center();
+	Eigen::Vector3d cy = p2->get_center();
 	
 	//Coordinates in local frames
     Eigen::Vector3d x = Rx.transpose() * (X-cx);
@@ -215,7 +218,7 @@ Eigen::Vector2d Superellipsoid::constraints(Superellipsoid& p1, Superellipsoid& 
 
 	return H;
 }
-Eigen::Matrix4d Superellipsoid::J_matrix(Superellipsoid& p1, Superellipsoid& p2, Eigen::Vector4d& Z, double ax[3], double ay[3], double ex[2], double ey[2]) {
+Eigen::Matrix4d Superellipsoid::J_matrix(Superellipsoid* p1, Superellipsoid* p2, Eigen::Vector4d& Z, double ax[3], double ay[3], double ex[2], double ey[2]) {
 	
 	// Input :
 	// 			Z : [X, mu]
@@ -226,10 +229,10 @@ Eigen::Matrix4d Superellipsoid::J_matrix(Superellipsoid& p1, Superellipsoid& p2,
 	double mu = Z(3);
 
 	// Particle parameters
-	Eigen::Matrix3d Rx = p1.get_orientation().toRotationMatrix();
-	Eigen::Matrix3d Ry = p2.get_orientation().toRotationMatrix();
-	Eigen::Vector3d cx = p1.get_center();
-	Eigen::Vector3d cy = p2.get_center();
+	Eigen::Matrix3d Rx = p1->get_orientation().toRotationMatrix();
+	Eigen::Matrix3d Ry = p2->get_orientation().toRotationMatrix();
+	Eigen::Vector3d cx = p1->get_center();
+	Eigen::Vector3d cy = p2->get_center();
 
 	//Coordinates in local frames
     Eigen::Vector3d x = Rx.transpose() * (X-cx);
@@ -259,8 +262,8 @@ Eigen::Matrix4d Superellipsoid::J_matrix(Superellipsoid& p1, Superellipsoid& p2,
     Eigen::Vector3d F2g = Ry * f2g;
 
     // Constraint hessians
-    Eigen::Matrix3d h1 = p1.inside_outside_hess(x);
-    Eigen::Matrix3d h2 = p2.inside_outside_hess(x);
+    Eigen::Matrix3d h1 = p1->inside_outside_hess(x);
+    Eigen::Matrix3d h2 = p2->inside_outside_hess(x);
 
     Eigen::Matrix3d H1 = Rx * h1 * Rx.transpose();
     Eigen::Matrix3d H2 = Ry * h2 * Ry.transpose();
@@ -275,7 +278,7 @@ Eigen::Matrix4d Superellipsoid::J_matrix(Superellipsoid& p1, Superellipsoid& p2,
 
     return J;
 }
-Eigen::Vector4d Superellipsoid::phi(Superellipsoid &p1, Superellipsoid &p2, Eigen::Vector4d &Z, double ax[3], double ay[3], double ex[2], double ey[2]) {
+Eigen::Vector4d Superellipsoid::phi(Superellipsoid* p1, Superellipsoid* p2, Eigen::Vector4d &Z, double ax[3], double ay[3], double ex[2], double ey[2]) {
 
 	// Input :	Z : [X, mu]
 	//			X : 3d global coordinates
@@ -285,10 +288,10 @@ Eigen::Vector4d Superellipsoid::phi(Superellipsoid &p1, Superellipsoid &p2, Eige
 	double mu = Z(3);
 
 	// Particle parameters
-	Eigen::Matrix3d Rx = p1.get_orientation().toRotationMatrix();
-	Eigen::Matrix3d Ry = p2.get_orientation().toRotationMatrix();
-	Eigen::Vector3d cx = p1.get_center();
-	Eigen::Vector3d cy = p2.get_center();
+	Eigen::Matrix3d Rx = p1->get_orientation().toRotationMatrix();
+	Eigen::Matrix3d Ry = p2->get_orientation().toRotationMatrix();
+	Eigen::Vector3d cx = p1->get_center();
+	Eigen::Vector3d cy = p2->get_center();
 
 	//Coordinates in local frames
     Eigen::Vector3d x = Rx.transpose() * (X-cx);
@@ -328,19 +331,20 @@ Eigen::Vector4d Superellipsoid::phi(Superellipsoid &p1, Superellipsoid &p2, Eige
 	return phi;
 }
 
-bool Superellipsoid::distance(Superellipsoid& p1, Superellipsoid& p2){
+bool Superellipsoid::distance(Superellipsoid* p1, Superellipsoid* p2){
 	// Parameters
 	int N = 4;
 	int K = 8;
 	double eps = 1e-1;
 
 	// Particle parameters
-	double ax[3] = {p1.scale[0], p1.scale[1], p1.scale[2]};
-	double ay[3] = {p2.scale[0], p2.scale[1], p2.scale[2]};
-	double ex[2] = {p1.shape[0], p1.shape[1]};
-	double ey[2] = {p2.shape[0], p2.shape[1]};
-	Eigen::Vector3d cx = p1.get_center();
-	Eigen::Vector3d cy = p2.get_center();
+
+	double ax[3] = {p1->scale[0], p1->scale[1], p1->scale[2]};
+	double ay[3] = {p2->scale[0], p2->scale[1], p2->scale[2]};
+	double ex[2] = {p1->shape[0], p1->shape[1]};
+	double ey[2] = {p2->shape[0], p2->shape[1]};
+	Eigen::Vector3d cx = p1->get_center();
+	Eigen::Vector3d cy = p2->get_center();
 	// Smallest scale parameters
 	Eigen::Vector3d tx = {ax[0], ax[1], ax[2]};
 	Eigen::Vector3d ty = {ay[0], ay[1], ay[2]};
