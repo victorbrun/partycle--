@@ -28,7 +28,7 @@ class Superellipsoid {
 
 		
 	public:
-		Superellipsoid(int cls, double scale_params[3], double shape_params[2]);
+		Superellipsoid(int component_id, double scale_params[3], double shape_params[2]);
 
 		// Returns class of Superellipsoid.
 		int get_component_id();

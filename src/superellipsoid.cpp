@@ -97,6 +97,10 @@ double Superellipsoid::circumscribed_sphere_radius() {
 	double a = this->get_scale("a");
 	double b = this->get_scale("b");
 	double c = this->get_scale("c");
+	
+	// Note that this sphere radius is a bit too big
+	// when particle is sphere. The reson is that we want to 
+	// ensure that particle is enclosed when particle is qubic.
 	return std::sqrt( a*a + b*b + c*c );
 }
 

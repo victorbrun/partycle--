@@ -7,9 +7,10 @@ import quaternion as qn
 
 ########### PACKING SETTINGS ###########
 DOMAIN_CSV = "build/domain.csv"
-DOMAIN_X_BOUNDS = (0, 100)
-DOMAIN_Y_BOUNDS = (0, 100)
-DOMAIN_Z_BOUNDS = (0, 100)
+DOMAIN_X_BOUNDS = (0, 10)
+DOMAIN_Y_BOUNDS = (0, 10)
+DOMAIN_Z_BOUNDS = (0, 10)
+PARTICLE_PLOTTING_RESOLUTION = 20
 COMPONENT_ID_TO_COLOUR = {
         1: "b", # blue 
         2: "g", # green
@@ -119,7 +120,7 @@ def draw_particles(particles: List[Superellipsoid], resolution: int) -> None:
 
 def main():
     domain = load_particles(DOMAIN_CSV)
-    draw_particles(domain, 20)
+    draw_particles(domain, PARTICLE_PLOTTING_RESOLUTION)
 
 if __name__ == "__main__":
     main()
