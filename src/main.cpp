@@ -98,11 +98,16 @@ int main(int argc, char* argv[]) {
 	// memory.
 	Domain domain = Domain(x_range, y_range, z_range, contact_tol, particles->size());
 	
+	// Places the first four gener particles to initiate the packing
 	Superellipsoid* initial_particles[4] = {particles->at(0), particles->at(1), particles->at(2), particles->at(3)};
 	domain.initialise_outward_advancing_front(initial_particles);
-	domain.write_csv("domain.csv");
 
-	// TODO: double check that the target volume fractions are achieved after the change ParticleDistribution -> Component
+	// Iterates over the rest of the particles, sequentially adding them to the domain 
+	// by incrementing the advancing front.
+	for (size_t ix = 4; ix < particles->size(); ix++) {
+		domain.increment_advancing_front(particles->at(ix));
+	}
+
 	// TODO: fill the domain using advancing front!!
 	// TODO: Compute contact statistics and output it in some reasonable way
 	// TODO: DONE!

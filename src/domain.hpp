@@ -54,7 +54,7 @@ class Domain {
 		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol);
 		
 		// Constructor with number of particles to be added known
-		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, int n_particles);
+		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, size_t n_particles);
 
 		// Constructor with particles available
 		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, std::vector<Superellipsoid*>* particles);
@@ -63,7 +63,7 @@ class Domain {
 		~Domain();
 
 		// Returns the number of particles currently in the domain 
-		int n_particles(void);
+		size_t n_particles(void);
 
 		// Returns the the particles in the domain 
 		std::vector<Superellipsoid*>* get_particles();

@@ -291,7 +291,7 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 	this->particles = new CoordinateIndexer();
 }
 
-Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, int n_particles) {
+Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol, size_t n_particles) {
 	this->contact_tol = contact_tol;
 	this->x_bounds[0] = x_range[0];
 	this->x_bounds[1] = x_range[1];
@@ -320,7 +320,7 @@ Domain::~Domain() {
 	delete particles;
 }
 	
-int Domain::n_particles() { return this->particles->n_particles(); }
+size_t Domain::n_particles() { return this->particles->n_particles(); }
 
 std::vector<Superellipsoid*>* Domain::get_particles() { return this->particles->get_particles(); }
 

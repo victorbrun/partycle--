@@ -47,7 +47,7 @@ std::vector<int> CoordinateIndexer::intersect(std::vector<int>& v1, std::vector<
 
 CoordinateIndexer::CoordinateIndexer() {}
 
-CoordinateIndexer::CoordinateIndexer(int n_particles) {
+CoordinateIndexer::CoordinateIndexer(size_t n_particles) {
 	this->particles = new std::vector<Superellipsoid*>;
 	this->particles->reserve(n_particles);
 
@@ -66,11 +66,11 @@ CoordinateIndexer::CoordinateIndexer(std::vector<Superellipsoid*>* particles) {
 	this->particles = particles;
 
 	// Initialise arrays to index the particles by their center coordniates
-	int n_particles = particles->size();
+	size_t n_particles = particles->size();
 	this->particles_idx_x_sorted = new std::vector<int>(n_particles);
 	this->particles_idx_y_sorted = new std::vector<int>(n_particles);
 	this->particles_idx_z_sorted = new std::vector<int>(n_particles);
-	for (int ix = 0; ix < n_particles; ix++) {
+	for (size_t ix = 0; ix < n_particles; ix++) {
 		this->particles_idx_x_sorted->at(ix) = ix;
 		this->particles_idx_y_sorted->at(ix) = ix;
 		this->particles_idx_z_sorted->at(ix) = ix;
@@ -125,7 +125,7 @@ void CoordinateIndexer::add_particle(Superellipsoid* p) {
 	particles_idx_z_sorted->insert(this->particles_idx_z_sorted->begin() + z_insert_idx, new_idx);
 }
 
-int CoordinateIndexer::n_particles() { 
+size_t CoordinateIndexer::n_particles() { 
 	// length and index is of by one but next empty index is 
 	// always one larger than last index to have element so this 
 	// works great :)
