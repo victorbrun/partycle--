@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <string>
 
-#define CONTACT_TOL 1e-6
+#define CONTACT_TOL 1e-2
 
 int main(int argc, char* argv[]) {
 	// Parses input arguments and stores them in file-scope varaibel	
