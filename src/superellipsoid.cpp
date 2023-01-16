@@ -340,9 +340,9 @@ Eigen::Vector4d Superellipsoid::phi(Superellipsoid* p1, Superellipsoid* p2, Eige
 
 bool Superellipsoid::distance(Superellipsoid* p1, Superellipsoid* p2){
 	// Parameters
-	int N = 4;
-	int K = 8;
-	double eps = 1e-1;
+	int N = 5; 		// Number of steps from spherical particle to current particle
+	int K = 8; 		// Number of newton steps for a given set of particles
+	double eps = 1e-1; 	// Step length termination cirteria 
 
 	// Particle parameters 
 	double ax[3] = {p1->scale[0], p1->scale[1], p1->scale[2]};
@@ -373,7 +373,6 @@ bool Superellipsoid::distance(Superellipsoid* p1, Superellipsoid* p2){
 	double pNo;
 	Eigen::Vector4d Z = {(cx[0]+cy[0])/2, (cx[1]+cy[1])/2, (cx[2]+cy[2])/2, 1};
 	bool b;
-	int counter = 0;
 	for (int i = 0; i < N; i++) {
 		// Increment shape and scale parameters
 		double exi[2] = {ex0[0] + i * dex[0], ex0[1] + i * dex[1]};
@@ -396,23 +395,31 @@ bool Superellipsoid::distance(Superellipsoid* p1, Superellipsoid* p2){
 			double alpha = 1;
 			double d;
 			while (true){
-				std::cout << "HERE" << counter << std::endl;
-				counter++;
 				Zp = Z+alpha*dZ;
 				pNi = Superellipsoid::phi(p1, p2, Zp, axi, ayi, exi, eyi).norm();
-				if (pNi<pNo) {
+		
+				//std::cout << "pNi = " << pNi << " pNo = " << pNo << " alpha = " << alpha;
+
+				if (pNi <= pNo) {
 					// If we're closer to a solution; accept step size
 					d = alpha*dZ.norm();
 					Z = Z+alpha*dZ;
 					break;
-
 				} else {
 					alpha = alpha/2;
-
 				}
-			if(d<eps) {
-				break;
-			}
+				
+				// DEBUGG
+				//std::cout << " d = " << d << " eps = " << eps << std::endl;
+				if (alpha == 0) throw std::runtime_error("debugg termination");
+				
+				
+				//Eigen::Vector2d temp = Superellipsoid::constraints(p1, p2, Zp, axi, ayi, exi, eyi);
+				//std::cout << "constraints = " << "(" << temp(0) << "," << temp(1) << ")" << std::endl;
+
+				if(d<eps) {
+					break;
+				}
 			}
 		}
 	

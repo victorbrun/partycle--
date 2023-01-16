@@ -32,9 +32,7 @@ bool Domain::check_collision(Superellipsoid* p1, Superellipsoid* p2) {
 	} else if ( center_dist2 < R1*R1 + R2*R2 ) {
 		// Between inscribed and circumscribed sphere so 
 		// checks collision using exact distance
-		std::cout << "before distance computation" << std::endl;
 		ret = Superellipsoid::distance(p1, p2);
-		std::cout << "after distance computation " << std::endl;
 	} else {
 		// Outside circumscribed sphere so no collision so just returning
 		// false and the exact distance.
@@ -100,7 +98,7 @@ void Domain::increment_advancing_front(Superellipsoid* p) {
 				std::vector<Superellipsoid*> fixed_ps = {p_ref, p1, p2};
 
 				collision_result = this->binary_approach(fixed_ps, p);
-				if (collision_result == 0 || collision_result == 1 || collision_result == 2) {
+				if (collision_result == 0 || collision_result == 1 || collision_result == 5) {
 					// Binary approach suceeded so we add particle to domain and 
 					// advancing front.
 					this->add_particle(p);
@@ -129,61 +127,6 @@ void Domain::increment_advancing_front(Superellipsoid* p) {
 			}
 		}
 	}
-	/*
-	bool all_fails = true;  // Default to true, update if success
-	bool cc; // Tracks collisions
-	// Test all combinations of neighbour pairs, given that we have at least 2 contacts
-	// Running binary approach. If successfull we do not try any other pair.
-	//  If unsuccessfull we continue to next pair of particles. If no pair of particles 
-	//  are successfull we deem the reference point unreachable and delete it from the 
-	//  advancing front.
-	if (no_nonzeros >= 2) {
-		for (int ix = 0;  ix < no_nonzeros-1; ix++) {
-			Superellipsoid* p1 = af.at(ix);
-			for (int jx = ix + 1; jx < no_nonzeros; jx++) {
-				Superellipsoid* p2 = af.at(jx);
-				
-				std::vector<Superellipsoid*> particles; 
-				particles.push_back(p_ref);
-				particles.push_back(p1);
-				particles.push_back(p2);
-
-				// Try to approach chosen particles
-				cc = this->binary_approach(particles, p);
-				if (cc == 0 || cc == 1) {
-					// Binary approach succeeded:
-					// Add the particle to the advancing front and domain list
-					this->add_particle_af(p);
-					this->add_particle(p);
-
-					//Update contacts
-					p->add_contact(particles[0]);
-					p->add_contact(particles[1]);
-					p->add_contact(particles[2]);
-					
-					particles[0]->add_contact(p);
-					particles[1]->add_contact(p);
-					particles[2]->add_contact(p);
-
-					//
-					all_fails = false; 
-					break;
-				} else {
-					// Binary approach failed:  
-					//pair[0].remove_contact(p_ref)
-                	//pair[1].remove_contact(p_ref)
-					std::cout << "we should not be here\n";
-				}
-
-			}
-		}
-	}
-	if (all_fails) {
-		// All possible particle assemblies failed: 
-		this->remove_particle_af(p);
-
-	}
-	*/
 	return; 
 }
 
@@ -191,9 +134,6 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 	Superellipsoid* fp1 = fixed_particles.at(0);
 	Superellipsoid* fp2 = fixed_particles.at(1);
 	Superellipsoid* fp3 = fixed_particles.at(2);
-
-	std::cout << "component_id of fixed particles: " << fp1->get_component_id() << " " << fp2->get_component_id() << " " << fp3->get_component_id() << "\n";
-	std::cout << "component_id of mobile particle: " << mobile_particle->get_component_id() << "\n";
 
 	double R1 = mobile_particle->circumscribed_sphere_radius();
 	//double r1 = mobile_particle->inscribed_sphere_radius();
@@ -233,7 +173,6 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 	int collision_counter = 0;
 	int relocation_counter = 0;
 
-	
 	// Cache varables
 	bool collision_old;
 	Eigen::Vector3d old_center;
@@ -241,8 +180,8 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 	// Tolerances & termination parameters
 	double tol1 = this->contact_tol;	// Overlap tolerance
 	double tol2 = this->contact_tol;	// Within-distance tolerance
-	int N = 50; 		   				// Max iteration count
-	int K = 10;             				// Max sequential collision count
+	int N = 20; 		   				// Max iteration count
+	int K = 10;             			// Max sequential collision count
 
 	// Termination flags
 	bool F1 = false;	  // Success: stepsize < tol1 && no cc to cc : collision with small (tolerable) overlap. 			Exit code: 0
@@ -251,13 +190,12 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 	bool F4 = false;	  // Failure: i == 0 && cc == true           : Non - viable startpoint.								Exit code: 3
 	bool F5 = false;	  // Failure: collision_counter > K          : Maximum number of sequential collisions reached.		Exit code: 4
 
-
 	// Checks that we have collision in mid_point and no collision in starting_point,
 	// i.e. checks that there must be a possition in close contact in (mid_point, starting_point]
 	std::vector<Superellipsoid*>* all_particles = this->get_particles();
 	mobile_particle->set_center(mid_point);
 	if (Domain::check_collision(mobile_particle, *all_particles) == false) {
-		throw std::runtime_error("mobile particle should collide with fixed particles in point approached by binary approach.");
+		return 5;
 	}
 	mobile_particle->set_center(starting_point);
 	if (Domain::check_collision(mobile_particle, *all_particles) == true) {
@@ -287,9 +225,7 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 	
 		// Updates the domain in which to search for possible placement 
 		// depending on if current placement has collision or not
-		std::cout << "before main collision tests" << std::endl;
 		bool collision = Domain::check_collision(mobile_particle, possible_collisions);
-		std::cout << "after main collision test" << std::endl;
 		if (collision) {
 			collision_counter++;
 			lambda_hi = lambda - this->contact_tol;
@@ -336,7 +272,7 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 		iterations++;
 	}
 
-	std::cout << "[INFO]: relocated particle " << relocation_counter << " times." << std::endl;
+	//std::cout << "[INFO]: relocated particle " << relocation_counter << " times." << std::endl;
 	return exit_code;
 }
 
