@@ -3,13 +3,17 @@
 
 #include <algorithm>
 #include <cmath>
+#include <eigen3/Eigen/src/Geometry/Quaternion.h>
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <regex>
 #include <stdexcept>
 
-bool check_collision(Superellipsoid* p1, Superellipsoid* p2) {
+
+/***** Private *****/
+
+bool Domain::check_collision(Superellipsoid* p1, Superellipsoid* p2) {
 	Eigen::Vector3d c1 = p1->get_center();
 	Eigen::Vector3d c2 = p2->get_center();
 	double center_dist2 = (c1[0] - c2[0])*(c1[0] - c2[0]) + 
@@ -28,7 +32,9 @@ bool check_collision(Superellipsoid* p1, Superellipsoid* p2) {
 	} else if ( center_dist2 < R1*R1 + R2*R2 ) {
 		// Between inscribed and circumscribed sphere so 
 		// checks collision using exact distance
+		std::cout << "before distance computation" << std::endl;
 		ret = Superellipsoid::distance(p1, p2);
+		std::cout << "after distance computation " << std::endl;
 	} else {
 		// Outside circumscribed sphere so no collision so just returning
 		// false and the exact distance.
@@ -37,7 +43,12 @@ bool check_collision(Superellipsoid* p1, Superellipsoid* p2) {
 	return ret;
 }
 
-/***** Private *****/
+bool Domain::check_collision(Superellipsoid* p, const std::vector<Superellipsoid*>& p_vec) {
+	for (size_t ix = 0; ix < p_vec.size(); ix++) {
+		if (Domain::check_collision(p, p_vec.at(ix))) return true;
+	}
+	return false;
+}
 
 void Domain::remove_particle_af(Superellipsoid* p) { 
 	// Searches for the index at which p is located in advancing_front
@@ -60,58 +71,61 @@ std::vector<Superellipsoid*> Domain::particles_in_subdomain(double x_range[2], d
 }
 
 void Domain::increment_advancing_front(Superellipsoid* p) {
-	std::vector<Superellipsoid*> af = this->advancing_front;
-	if (af.size() == 0) return;
-
-	// Draw a reference particle
+	// TODO: we must choose new reference particle until we cannot chose another
+	// currently we only choose one and if it does not work, i.e. should be removed from af 
+	// we just terminate this function without doing anything
 	std::random_device rd; 
-    std::mt19937 mt(rd()); 
-    std::uniform_int_distribution<> uni(0, af.size()-1);
-	int idx = uni(mt);
-	Superellipsoid* p_ref = af.at(idx);
+	std::mt19937 mt(rd()); 
 
-	// Extracts reference particles contacts and checks so that there are enough 
-	// of them to preform the binary approach algorithm.
-	std::vector<Superellipsoid*> ref_contacts = p_ref->get_contacts();
-	if (ref_contacts.size() < 2) {
-		throw std::runtime_error("reference particle does not have enough contacts. Must be at least 2.");
-	}
+	while (this->advancing_front.size() > 0) {
+		std::vector<Superellipsoid*> af = this->advancing_front;
 
-	for (size_t ix = 0; ix < ref_contacts.size(); ix++) {
-		std::cout << "conacts of " << p_ref->get_component_id()<< ": " << p_ref->get_contacts().at(ix)->get_component_id() << "\n";
-	}
+		// Draw a reference particle
+		std::uniform_int_distribution<> uni(0, af.size()-1);
+		int idx = uni(mt);
+		Superellipsoid* p_ref = af.at(idx);
 
-	int collision_result;
-	for (size_t ix = 0; ix < ref_contacts.size(); ix++) {
-		Superellipsoid* p1 = ref_contacts.at(ix);
-		for (size_t jx = ix+1; ix < ref_contacts.size()-1; ix++) {
-			Superellipsoid* p2 = ref_contacts.at(jx);
-			std::vector<Superellipsoid*> fixed_ps = {p_ref, p1, p2};
-	
-			collision_result = this->binary_approach(fixed_ps, p);
-			if (collision_result == 0 || collision_result == 1) {
-				// Binary approach suceeded so we add particle to domain and 
-				// advancing front.
-				this->add_particle(p);
-				this->add_particle_af(p);
+		// Extracts reference particles contacts and checks so that there are enough 
+		// of them to preform the binary approach algorithm.
+		std::vector<Superellipsoid*> ref_contacts = p_ref->get_contacts();
+		if (ref_contacts.size() < 2) {
+			throw std::runtime_error("reference particle does not have enough contacts. Must be at least 2.");
+		}
 
-				// Update contacts
-				// TODO: contact should only be added for those particles 
-				// which are within contact distance 
-				p->add_contact(fixed_ps.at(0));
-				p->add_contact(fixed_ps.at(1));
-				p->add_contact(fixed_ps.at(2));
-				fixed_ps.at(0)->add_contact(p);
-				fixed_ps.at(1)->add_contact(p);
-				fixed_ps.at(2)->add_contact(p);
+		int collision_result;
+		for (size_t ix = 0; ix < ref_contacts.size()-1; ix++) {
+			Superellipsoid* p1 = ref_contacts.at(ix);
+			for (size_t jx = ix+1; jx < ref_contacts.size(); jx++) {
+				Superellipsoid* p2 = ref_contacts.at(jx);
+				std::vector<Superellipsoid*> fixed_ps = {p_ref, p1, p2};
 
-				// We will permamently place the particle at the first 
-				// possible possition so since binary approach succeeded
-				// we break here.
-				break;
-			} else {
-				std::cout << "binary approach exit code: " << collision_result << std::endl;
-				throw std::runtime_error("binary approach failed. This should not happen.");
+				collision_result = this->binary_approach(fixed_ps, p);
+				if (collision_result == 0 || collision_result == 1 || collision_result == 2) {
+					// Binary approach suceeded so we add particle to domain and 
+					// advancing front.
+					this->add_particle(p);
+					this->add_particle_af(p);
+
+					// Update contacts
+					// TODO: contact should only be added for those particles 
+					// which are within contact distance 
+					p->add_contact(fixed_ps.at(0));
+					p->add_contact(fixed_ps.at(1));
+					p->add_contact(fixed_ps.at(2));
+					fixed_ps.at(0)->add_contact(p);
+					fixed_ps.at(1)->add_contact(p);
+					fixed_ps.at(2)->add_contact(p);
+
+					// We will permamently place the particle at the first 
+					// possible possition so since binary approach succeeded
+					// we return here.
+					return;
+				}
+
+				// If arrive here and it is the last iterartion of both loops
+				// then the reference particle is such that no new particle can be placed 
+				// in contact with it and 2 neighbours, so we remove it from the advancing front 
+				if (ix == ref_contacts.size()-2 && jx == ref_contacts.size()-1) this->remove_particle_af(p_ref);
 			}
 		}
 	}
@@ -189,9 +203,9 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 	Eigen::Vector3d c_fp3 = fp3->get_center();
 	
 	Eigen::Vector3d mid_point = (c_fp1 + c_fp2 + c_fp3)/3;
-	Eigen::Vector3d domain_mid_point((this->x_bounds[0] + this->x_bounds[1])/2,
-									 (this->y_bounds[0] + this->y_bounds[1])/2,
-									 (this->z_bounds[0] + this->z_bounds[1])/2);
+	Eigen::Vector3d domain_mid_point( this->x_bounds[0] + (this->x_bounds[1] - this->x_bounds[0])/2,
+									  this->y_bounds[0] + (this->y_bounds[1] - this->y_bounds[0])/2,
+									  this->z_bounds[0] + (this->z_bounds[1] - this->z_bounds[0])/2);
 
 	// Computing the normal vector to the plane intersecting
 	// all three fixed particles' center 
@@ -207,41 +221,57 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 		if (r > r_max) r_max = r;
 	}
 	
+	// First point mobile particle is placed in and vector we move it along
 	Eigen::Vector3d starting_point = mid_point + (2*r_max) * n_vec;
-
-	// Return value; true indicates success
-	bool ret = true; 
+	Eigen::Vector3d p_vec = mid_point-starting_point;
+	
+	// Return value; 0 indicates success
+	int exit_code = 0; 
 
 	// Counters
 	int iterations = 0; 
 	int collision_counter = 0;
 	int relocation_counter = 0;
 
-	// Step parameters
-	double lambda_hi = 1; // lambda and hi/lo are updated depending on collision check outcomes
-	double lambda_lo = 0;
-	double lambda = 0;    // lambda ranges from 0 to 1, moving the particle from the start to end point
 	
-	// Misc
-	Eigen::Vector3d p_vec = mid_point-starting_point;
+	// Cache varables
 	bool collision_old;
+	Eigen::Vector3d old_center;
 
 	// Tolerances & termination parameters
-	double tol1 = 1e-2;	   // Overlap tolerance
-	double tol2 = 1e-2;    // Within-distance tolerance
-	int N = 20; 		   // Max iteration count
-	int K = 5;             // Max sequential collision count
+	double tol1 = this->contact_tol;	// Overlap tolerance
+	double tol2 = this->contact_tol;	// Within-distance tolerance
+	int N = 50; 		   				// Max iteration count
+	int K = 10;             				// Max sequential collision count
 
 	// Termination flags
-	bool F1 = false;	  // Success: stepsize < tol1 && no cc to cc : collision with small (tolerable) overlap
-	bool F2 = false;	  // Success: stepsize < tol2 && cc to no cc : no collision with small distance between particles
-	bool F3 = false;	  // Failure: i > K                          : Maximum number of iterations reached
-	bool F4 = false;	  // Failure: i == 0 && cc == true           : Non - viable startpoint
-	bool F5 = false;	  // Failure: collision_counter > K          :  Maximum number of sequential collisions reached
+	bool F1 = false;	  // Success: stepsize < tol1 && no cc to cc : collision with small (tolerable) overlap. 			Exit code: 0
+	bool F2 = false;	  // Success: stepsize < tol2 && cc to no cc : no collision with small distance between particles.	Exit code: 1
+	bool F3 = false;	  // Failure: i > N                          : Maximum number of iterations reached.				Exit code: 2					
+	bool F4 = false;	  // Failure: i == 0 && cc == true           : Non - viable startpoint.								Exit code: 3
+	bool F5 = false;	  // Failure: collision_counter > K          : Maximum number of sequential collisions reached.		Exit code: 4
 
+
+	// Checks that we have collision in mid_point and no collision in starting_point,
+	// i.e. checks that there must be a possition in close contact in (mid_point, starting_point]
+	std::vector<Superellipsoid*>* all_particles = this->get_particles();
+	mobile_particle->set_center(mid_point);
+	if (Domain::check_collision(mobile_particle, *all_particles) == false) {
+		throw std::runtime_error("mobile particle should collide with fixed particles in point approached by binary approach.");
+	}
+	mobile_particle->set_center(starting_point);
+	if (Domain::check_collision(mobile_particle, *all_particles) == true) {
+		// Particle cannot be in conatct with other particles at starting point
+		return 3;
+	}
+
+	// Step parameters. These are updated depending on collision check outcomes
+	double lambda_hi = 1; // lambda and hi/lo are updated depending on collision check outcomes
+	double lambda_lo = 0;
 	double d = 2 * this->larges_circumscribing_sphere_radius;
 	while (true) {
-		std::cout << "begining of loop: lambda = " << lambda << " lambda_lo = " << lambda_lo << " lambda_hi = " << lambda_hi << std::endl;
+		double lambda = lambda_lo + (lambda_hi - lambda_lo)/2;
+		
 		Eigen::Vector3d new_center = starting_point + lambda*p_vec;
 		mobile_particle->set_center(new_center);
 		relocation_counter++;
@@ -252,40 +282,27 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 		double x_bounds[2] = {new_center[0] - d, new_center[0] + d};
 		double y_bounds[2] = {new_center[1] - d, new_center[1] + d};
 		double z_bounds[2] = {new_center[2] - d, new_center[2] + d};
-		//std::vector<Superellipsoid*> possible_collisions = this->particles_in_subdomain(x_bounds, y_bounds, z_bounds);
-		std::vector<Superellipsoid*>* possible_collisions = this->get_particles();
-
-		// Loops through possible collisions and checks for collisions
-		bool collision = false; // Initialization to false will make it cover the case when possible_collisions.size() = 0.
-		for (size_t ix = 0; ix < possible_collisions->size(); ix++) {
-			collision = check_collision(mobile_particle, possible_collisions->at(ix));
-			// Exits collision check loop on first collision
-			if (collision) break;
-		}
-
-		if (collision && iterations == 0) {
-			return 0; // DEBUGG
-			//throw std::runtime_error("initial placement of new particle collides with already placed particles");
-			//break;
-		} else if (collision && iterations > 0) {
-			// If we have collision we take a step away from mid_point
-			// by setting the lower boundary of the interval in which a 
-			// placement must exist, to the mid point between the current bounds.
-			std::cout << "[INFO]: collision detected between mobile particle and at least one other particle." << std::endl;
-			lambda_lo = lambda_lo + (lambda_hi + lambda_lo)/2;
-			collision_counter ++; 
+		std::vector<Superellipsoid*> possible_collisions = this->particles_in_subdomain(x_bounds, y_bounds, z_bounds);
+		//std::vector<Superellipsoid*>* possible_collisions = this->get_particles();
+	
+		// Updates the domain in which to search for possible placement 
+		// depending on if current placement has collision or not
+		std::cout << "before main collision tests" << std::endl;
+		bool collision = Domain::check_collision(mobile_particle, possible_collisions);
+		std::cout << "after main collision test" << std::endl;
+		if (collision) {
+			collision_counter++;
+			lambda_hi = lambda - this->contact_tol;
 		} else {
-			// If we have no collision we take a step closer to mid_point
-			// by setting the upper boundary of the interval in which a 
-			// placement must exist, to the mid point between the current bounds.
-			lambda_hi = lambda_lo + (lambda_hi + lambda_lo)/2;
 			collision_counter = 0;
+			lambda_lo = lambda + this->contact_tol;
 		}
-
+	
 		// Check termination criteria
 		if (iterations > 0) {
-			F1 = (d < tol1) && (collision_old = false) && (collision = true);
-			F2 = (d < tol2) && (collision_old = true) && (collision = false);
+			double step_size = (new_center - old_center).norm();
+			F1 = (step_size < tol1) && (collision_old == false) && (collision == true);
+			F2 = (step_size < tol2) && (collision_old == true) && (collision == false);
 		}
 		F3 = (iterations > N);
 		F4 = (iterations == 0) && collision;
@@ -293,35 +310,34 @@ int Domain::binary_approach(std::vector<Superellipsoid*> fixed_particles, Supere
 
 		if (F1) {
 			// Success
-			return 0;
+			exit_code = 0;
+			break;
 		} else if(F2){
 			// Success
-			return 1;
+			exit_code = 1;
+			break;
 		} else if(F3){
 			// Failure
-			return 2;
+			exit_code = 2;
+			break;
 		} else if(F4){
 			// Failure
-			return 3;
+			exit_code = 3;
+			break;
 		} else if(F5){
 			// Failure
-			return 4;
+			exit_code = 4;
+			break;
 		}
 
-		// Updates step length and direction 
-		lambda = lambda_lo + (lambda_hi - lambda_lo)/2;
-
-		// Set old collision counter for the sake of exit flags
+		// Updates stuff needed for next iteration
+		old_center = new_center; 
 		collision_old = collision;
+		iterations++;
+	}
 
-		// Update iterations
-		iterations++; 
-		
-		std::cout << "end of loop" << std::endl;
-	}	
-	
 	std::cout << "[INFO]: relocated particle " << relocation_counter << " times." << std::endl;
-	return ret;
+	return exit_code;
 }
 
 /***** Public *****/
@@ -363,7 +379,6 @@ Domain::Domain(double x_range[2], double y_range[2], double z_range[2], double c
 }
 
 Domain::~Domain() {
-	std::cout << "[INFO]: destroying domain instance" << std::endl;
 	delete particles;
 }
 	

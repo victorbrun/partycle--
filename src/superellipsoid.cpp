@@ -373,6 +373,7 @@ bool Superellipsoid::distance(Superellipsoid* p1, Superellipsoid* p2){
 	double pNo;
 	Eigen::Vector4d Z = {(cx[0]+cy[0])/2, (cx[1]+cy[1])/2, (cx[2]+cy[2])/2, 1};
 	bool b;
+	int counter = 0;
 	for (int i = 0; i < N; i++) {
 		// Increment shape and scale parameters
 		double exi[2] = {ex0[0] + i * dex[0], ex0[1] + i * dex[1]};
@@ -395,6 +396,8 @@ bool Superellipsoid::distance(Superellipsoid* p1, Superellipsoid* p2){
 			double alpha = 1;
 			double d;
 			while (true){
+				std::cout << "HERE" << counter << std::endl;
+				counter++;
 				Zp = Z+alpha*dZ;
 				pNi = Superellipsoid::phi(p1, p2, Zp, axi, ayi, exi, eyi).norm();
 				if (pNi<pNo) {

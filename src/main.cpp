@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <string>
 
-#define CONTACT_TOL 1e-3
+#define CONTACT_TOL 1e-6
 
 int main(int argc, char* argv[]) {
 	// Parses input arguments and stores them in file-scope varaibel	
@@ -81,7 +81,6 @@ int main(int argc, char* argv[]) {
 	double z_range[2] = {domain_bounds.at(4), domain_bounds.at(5)};
 	double domain_vol = (x_range[1] - x_range[0]) * (y_range[1] - y_range[0]) * (z_range[1] - z_range[0]);
 
-	/*
 	// Generates particles acocrding to the specification given in component-file
 	std::vector<Superellipsoid*>* particles = generate_random_particles(components, domain_vol);
 	std::cout << "[INFO]: " << particles->size() << " particles generated" << std::endl;
@@ -94,33 +93,20 @@ int main(int argc, char* argv[]) {
 	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::shuffle(particles->begin(), particles->end(), mt);
-	*/
 
 	// Initialises domain. This is done here and not where its bounds are defined since we want to 
 	// specify the number of particles we are going to add to it. This will make the domain pre-allocate
 	// memory.
 	Domain domain = Domain(x_range, y_range, z_range, contact_tol, 10);
 	
-	std::vector<Superellipsoid*>* test_particles = new std::vector<Superellipsoid*>(5);
-	for (size_t ix = 0; ix < test_particles -> size(); ix++) {
-		int component_id = ix+1;
-		double scale[3] = {1,1,1};
-		double shape[2] = {2,2};
-		Eigen::Quaternion<double> rot = Eigen::Quaternion<double>::UnitRandom();
-
-		Superellipsoid* p = new Superellipsoid(component_id, scale, shape);
-		p->set_orientation(rot);
-		test_particles->at(ix) = p;
-	}
-
 	// Uses first four particles to initiate advancing front
-	Superellipsoid* init_p[4] = {test_particles->at(0), test_particles->at(1), test_particles->at(2), test_particles->at(3)};
+	Superellipsoid* init_p[4] = {particles->at(0), particles->at(1), particles->at(2), particles->at(3)};
 	domain.initialise_outward_advancing_front(init_p);
 	
 	// Uses the rest of the particles to incerement the advanding front
-	for (size_t ix = 4; ix < test_particles->size(); ix++) {
-		std::cout << "placing particle with idx: " << ix << "\n";
-		domain.increment_advancing_front(test_particles->at(ix));
+	for (size_t ix = 4; ix < particles->size(); ix++) {
+		std::cout << "[INFO]: placing particle number: " << ix+1 << std::endl;
+		domain.increment_advancing_front(particles->at(ix));
 	}
 	domain.write_csv("domain.csv");
 
@@ -130,7 +116,7 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "[INFO]: program finished, cleaning up.. " << std::endl;
 	std::cout << "[INFO]: destroying generated particles" << std::endl;
-	delete test_particles;	
+	delete particles;	
 
 	return EXIT_SUCCESS;
 }

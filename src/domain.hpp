@@ -48,7 +48,10 @@ class Domain {
 		 * @return vector of pointers to superellipsoids all of which lie in the domain defined by `x_range`x`y_range`x`z_range`.
 		 */
 		std::vector<Superellipsoid*> particles_in_subdomain(double* x_range, double* y_range, double* z_range);
-	
+
+		static bool check_collision(Superellipsoid* p1, Superellipsoid* p2);
+		static bool check_collision(Superellipsoid* p, const std::vector<Superellipsoid*>& p_vec);
+
 	public:
 		// Constructor without particles or numbe rof particles to be added known
 		Domain(double x_range[2], double y_range[2], double z_range[2], double contact_tol);
