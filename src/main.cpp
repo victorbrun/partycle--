@@ -5,6 +5,7 @@
 #include "domain.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <eigen3/Eigen/src/Geometry/Quaternion.h>
 #include <iostream>
 #include <numeric>
@@ -105,8 +106,11 @@ int main(int argc, char* argv[]) {
 	
 	// Uses the rest of the particles to incerement the advanding front
 	for (size_t ix = 4; ix < particles->size(); ix++) {
-		std::cout << "[INFO]: placing particle number: " << ix+1 << std::endl;
+		//std::cout << "[INFO]: placing particle number: " << ix+1 << std::endl;
+		//auto start = std::chrono::high_resolution_clock::now();
 		domain.increment_advancing_front(particles->at(ix));
+		//auto stop = std::chrono::high_resolution_clock::now();
+		//std::cout << "total time to place particle " << ix+1 << ": " << (double(std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count()))/1000000.0 << "s" << std::endl;
 	}
 	domain.write_csv("domain.csv");
 
