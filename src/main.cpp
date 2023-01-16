@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
 	// Initialises domain. This is done here and not where its bounds are defined since we want to 
 	// specify the number of particles we are going to add to it. This will make the domain pre-allocate
 	// memory.
-	Domain domain = Domain(x_range, y_range, z_range, contact_tol, 10);
+	Domain domain = Domain(x_range, y_range, z_range, contact_tol, particles->size());
 	
 	// Uses first four particles to initiate advancing front
 	Superellipsoid* init_p[4] = {particles->at(0), particles->at(1), particles->at(2), particles->at(3)};
