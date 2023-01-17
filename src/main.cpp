@@ -114,9 +114,7 @@ int main(int argc, char* argv[]) {
 	}
 	domain.write_csv("domain.csv");
 
-	// TODO: fill the domain using advancing front!!
-	// TODO: Compute contact statistics and output it in some reasonable way
-	// TODO: DONE!
+	
 
 	std::cout << "[INFO]: program finished, cleaning up.. " << std::endl;
 	std::cout << "[INFO]: destroying generated particles" << std::endl;
