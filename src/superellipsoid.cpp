@@ -90,7 +90,7 @@ double Superellipsoid::volume() {
 	double n1 = this->get_shape("n1");
 	double n2 = this->get_shape("n2");
 
-	return 8 * a * b * c * (1/n1) * (1/n2) * std::beta(1/n1 + 1, 2/n1) * std::beta(1/n1, 1/n1);
+	return 8 * a * b * c * (1/n1) * (1/n2) * std::beta(1/n1 + 1, 2/n1) * std::beta(1/n2, 1/n2);
 }
 
 double Superellipsoid::circumscribed_sphere_radius() {
