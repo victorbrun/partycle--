@@ -80,7 +80,4 @@ double mean(const Distribution& d);
  */
 std::function<double(void)> get_sampler(const Distribution& d, std::mt19937& mt);
 
-// Returns a quaternion where each rotation angle has been unifomrly sampled over its domain
-Eigen::Quaternion<double> random_quaternion(std::mt19937& mt);
-
 #endif

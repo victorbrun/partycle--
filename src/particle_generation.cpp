@@ -60,7 +60,7 @@ std::vector<Superellipsoid*>* generate_random_particles(const std::vector<Compon
 		// Genereates new particles with random volume and rotation
 		for (size_t jx = 0; jx < (size_t)exp_n_particles.at(ix); jx++) {
 			Superellipsoid* new_p = new Superellipsoid(component_id, scale_params, shape_params);
-			new_p->set_orientation(random_quaternion(mt));
+			new_p->set_orientation(Eigen::Quaternion<double>::UnitRandom());
 			new_p->scale_to_volume(volume_sampler());
 			particles->at(kx) = new_p;
 			kx++;
@@ -193,18 +193,4 @@ std::function<double(void)> get_sampler(const Distribution& d, std::mt19937& mt)
 	} else {
 		throw std::invalid_argument("[ERROR]: could not recognise distribution name. Available are: uniform, normal, log-normal.");
 	}
-}
-
-Eigen::Quaternion<double> random_quaternion(std::mt19937& mt) {
-	std::uniform_real_distribution<double> u(0.0, 1.0);
-	double u1 = u(mt);
-	double u2 = u(mt);
-	double u3 = u(mt);
-
-	Eigen::Quaternion<double> q(std::sqrt(1-u1) * std::sin(2 * M_PI * u2),
-								std::sqrt(1-u1) * std::cos(2 * M_PI * u2),
-								std::sqrt(u1) * std::sin(2 * M_PI * u3),
-								std::sqrt(u1) * std::cos(2 * M_PI * u3));
-
-	return q;
 }
