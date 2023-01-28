@@ -51,6 +51,7 @@ class Domain {
 
 		static bool check_collision(Superellipsoid* p1, Superellipsoid* p2);
 		static bool check_collision(Superellipsoid* p, const std::vector<Superellipsoid*>& p_vec);
+		
 
 	public:
 		// Constructor without particles or numbe rof particles to be added known
@@ -74,6 +75,7 @@ class Domain {
 		// Adds `p` to the domain
 		void add_particle(Superellipsoid* p);
 		
+		// Tests all possible collisions
 		/**
 		 * Initialises the an outward going advancing front by placing the 
 		 * four particles in `particles` in the corners of a tetrahedron with center in 
@@ -85,7 +87,13 @@ class Domain {
 		void initialise_outward_advancing_front(Superellipsoid* particles[4]);
 
 		// Introduces the given particle into the domain and increments the advancing front accordingly.
-		void increment_advancing_front(Superellipsoid* p);
+		bool increment_advancing_front(Superellipsoid* p);
+
+		// Tests all possible collisions
+		int collision_test(); 
+
+		// Checks wether the particle is in the domain
+		bool within_domain(Superellipsoid* p);
 
 		/**
 		 * Performes binary approach moving `mobile_particle` as close to the average of the centers of `fixed_particles`

@@ -7,9 +7,11 @@ import quaternion as qn
 
 ########### PACKING SETTINGS ###########
 DOMAIN_CSV = "build/domain.csv"
-DOMAIN_X_BOUNDS = (0, 10)
-DOMAIN_Y_BOUNDS = (0, 10)
-DOMAIN_Z_BOUNDS = (0, 10)
+k = 20
+kp = k/2
+DOMAIN_X_BOUNDS = (-k, 2*k)
+DOMAIN_Y_BOUNDS = (-k, 2*k)
+DOMAIN_Z_BOUNDS = (-k, 2*k)
 PARTICLE_PLOTTING_RESOLUTION = 20
 COMPONENT_ID_TO_COLOUR = {
         1: "b", # blue 

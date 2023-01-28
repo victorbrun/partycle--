@@ -90,7 +90,7 @@ double Superellipsoid::volume() {
 	double n1 = this->get_shape("n1");
 	double n2 = this->get_shape("n2");
 
-	return 8 * a * b * c * (1/n1) * (1/n2) * std::beta(1/n1 + 1, 2/n1) * std::beta(1/n1, 1/n1);
+	return 8 * a * b * c * (1/n1) * (1/n2) * std::beta(1/n1 + 1, 2/n1) * std::beta(1/n2, 1/n2);
 }
 
 double Superellipsoid::circumscribed_sphere_radius() {
@@ -281,6 +281,7 @@ Eigen::Matrix4d Superellipsoid::J_matrix(Superellipsoid* p1, Superellipsoid* p2,
     J(ind, ind) = H1 + std::pow(mu, 2) * H2;
     J(3  , ind) = F1g-F2g;
     J(ind,   3) = 2*mu*F2g;
+	J(3,3) = 0; 
 
     return J;
 }
@@ -290,6 +291,7 @@ Eigen::Vector4d Superellipsoid::phi(Superellipsoid* p1, Superellipsoid* p2, Eige
 	// Input :	Z : [X, mu]
 	//			X : 3d global coordinates
 	//			mu: double 
+
 	std::vector<int> ind{0, 1, 2};
 	Eigen::Vector3d X = Z(ind);
 	double mu = Z(3);
@@ -426,7 +428,7 @@ bool Superellipsoid::distance(Superellipsoid* p1, Superellipsoid* p2){
 	}
     b = false;
 	Eigen::Vector2d h = Superellipsoid::constraints(p1, p2, Z, ax, ay, ex, ey);
-    if (h(1)<0 && h(1)<0) {
+    if (h(0)<0 && h(1)<0) {
 		// Collision
         b = true;
 	}

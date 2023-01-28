@@ -104,20 +104,39 @@ int main(int argc, char* argv[]) {
 	Superellipsoid* init_p[4] = {particles->at(0), particles->at(1), particles->at(2), particles->at(3)};
 	domain.initialise_outward_advancing_front(init_p);
 	
+	// Allowed failures
+	int T = 100; 
+	int t = 0; 
 	// Uses the rest of the particles to incerement the advanding front
 	for (size_t ix = 4; ix < particles->size(); ix++) {
 		//std::cout << "[INFO]: placing particle number: " << ix+1 << std::endl;
 		//auto start = std::chrono::high_resolution_clock::now();
-		domain.increment_advancing_front(particles->at(ix));
+		bool c = domain.increment_advancing_front(particles->at(ix));
+		if (c){
+			t++;
+		}else {
+			t = 0; 
+		}
+		
 		//auto stop = std::chrono::high_resolution_clock::now();
 		//std::cout << "total time to place particle " << ix+1 << ": " << (double(std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count()))/1000000.0 << "s" << std::endl;
+		if(t>T) break; 
 	}
 	domain.write_csv("domain.csv");
+
+	double total_volume = 0; 
+	std::vector<Superellipsoid*>* particles_ = domain.get_particles(); 
+	for(size_t ix = 0; ix< domain.n_particles(); ix++){
+		total_volume += particles_->at(ix)->volume();
+	}
 
 	// TODO: fill the domain using advancing front!!
 	// TODO: Compute contact statistics and output it in some reasonable way
 	// TODO: DONE!
-
+	std::cout << "[INFO]: no collisions:"  << domain.collision_test() <<  std::endl;
+	std::cout << "[INFO]: domain volume:"  << domain_vol <<  std::endl;
+	std::cout << "[INFO]: particle volume:"  << total_volume <<  std::endl;
+	std::cout << "[INFO]: no of particles placed:"  << domain.n_particles() <<  std::endl;
 	std::cout << "[INFO]: program finished, cleaning up.. " << std::endl;
 	std::cout << "[INFO]: destroying generated particles" << std::endl;
 	delete particles;	

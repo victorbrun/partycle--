@@ -1,2 +1,2 @@
 component_id;volume_distribution;volume_fraction;reference_particle_a;reference_particle_b;reference_particle_c;reference_particle_n1;reference_particle_n2
-1;log-normal(1,0.25);1;1;1;1;5;2
+1;log-normal(1,0);1;1;1;1;2;2
