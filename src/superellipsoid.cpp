@@ -278,6 +278,7 @@ Eigen::Matrix4d Superellipsoid::J_matrix(Superellipsoid* p1, Superellipsoid* p2,
     // Construct J
 	Eigen::Matrix4d J;
 
+	J(3,3) = 0;
     J(ind, ind) = H1 + std::pow(mu, 2) * H2;
     J(3  , ind) = F1g-F2g;
     J(ind,   3) = 2*mu*F2g;
