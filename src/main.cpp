@@ -15,6 +15,7 @@
 #include <string>
 
 #define CONTACT_TOL 1e-2
+#define MIXTURE_OUT_FILE_NAME "mixture.csv"
 
 int main(int argc, char* argv[]) {
 	// Parses input arguments and stores them in file-scope varaibel	
@@ -122,7 +123,7 @@ int main(int argc, char* argv[]) {
 		//std::cout << "total time to place particle " << ix+1 << ": " << (double(std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count()))/1000000.0 << "s" << std::endl;
 		if(t>T) break; 
 	}
-	domain.write_csv("domain.csv");
+	domain.write_csv(MIXTURE_OUT_FILE_NAME);
 
 	double total_volume = 0; 
 	std::vector<Superellipsoid*>* particles_ = domain.get_particles(); 
