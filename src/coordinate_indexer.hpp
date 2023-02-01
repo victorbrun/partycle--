@@ -55,17 +55,17 @@ class CoordinateIndexer {
 		CoordinateIndexer(std::vector<Superellipsoid*>* particles);
 		
 		// Constructor for when number of particles are known.
-		CoordinateIndexer(int n_particles);
+		CoordinateIndexer(size_t n_particles);
+
+		// Destructor
+		~CoordinateIndexer();
 
 		/**
 		 * Reserves space for `n_particles` in the `particles` vector.
 		 * This ought to be used when you can only know the number of particles 
 		 * to put in CoordinateIndexer after you have initialised it.
 		 */
-		void reserve_particle_space(int n_particles);
-
-		// Frees all the memory allocated on the heap
-		void destroy();
+		void reserve_particle_space(size_t n_particles);
 
 		// Adds `p` to CoordinateIndexer and indexes its coordinates.
 		void add_particle(Superellipsoid* p);
@@ -74,7 +74,7 @@ class CoordinateIndexer {
 		std::vector<Superellipsoid*>* get_particles();
 	
 		// Returns number of particles in CoordinateIndexer.
-		int n_particles();
+		size_t n_particles();
 
 		/**
 		 * Returns array of particles whose center lie in the domain defined by `x_range`x`y_range`x`z_range`.
