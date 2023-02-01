@@ -1,5 +1,7 @@
 # partycle--
-C++ program for geometrically generating particle mixtures and computing contact statistics. Since Github does not support "+" in repo names, the name is decremented instead of incremented.
+A C++ program for geometrically generating particle mixtures and computing contact statistics. Since Github does not support "+" in repo names, the name is decremented instead of incremented.
+
+The program was developed as part of the course "Project course in mathematical and statistical modelling" at Chalmers University of Technology. The project was hosted by AstraZeneca and it resulted in a report which can be found in the repo (`report.pdf`).
 
 ## Getting started
 
