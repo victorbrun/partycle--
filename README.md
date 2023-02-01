@@ -4,7 +4,25 @@ A C++ program for geometrically generating particle mixtures and computing conta
 The program was developed as part of the course "Project course in mathematical and statistical modelling" at Chalmers University of Technology. The project was hosted by AstraZeneca and it resulted in a report which can be found in the repo (`report.pdf`).
 
 ## Getting started
+### Building the project
+To use the program it first needs to be built. To do these follow the below steps:
+1. Ensure that [Eigen3](https://eigen.tuxfamily.org/index.php?title=Main_Page) is installed where `g++` can find it.
+2. Clone the repo and create a new folder at the project root named `build`.
+3. `cd` into `build/` and run `cmake ..`, this will generate the necessary Make files.
+4. Run `mak all` in `build/`.
 
+### Running the program
+Afte the project has been succesfully built there will be an executable in `build/bin/` named `partycle--`. This can be executed using according to below:
+- `partycle-- -d [DOMAIN DEFINITION] -cf [FILE] -ct [CONTACT TOLERANCE]`
+- `partycle-- --domain [DOMAIN DEFINITION] --component-file [FILE] --contact-tolerance [CONTACT TOLERANCE]`
+
+**Argument specification:**
+- The domain definition follows the format `[ax,bx]x[ay,by]x[az,bz]`, where `a*` is the lower bound in respective axis while `b*` is the upper bound. Note that no white spaces are alowed and that the first brackets define x-space, second y-space, and the third z-space.
+- The provided file need to be a `csv`-file without blank spaces. More about the format can be found under [Componenst list format](#Components-list-format).
+- The default contact tolerance is set to 1e-2, this means that if `-ct`/`--contact-tolerance` is left out the program will use 1e-2 as contact tolerance.
+
+When the program is finished a `csv`-file called `mixture.csv` has been created containing the mixture. This can be utilisd through the `plot.py` script to plot the mixture in 3d space. Note that this will take a LONG time for large mixtures. To change colours, plot axes, boundaries etc., just edit the constants in `plot.py` 
+  
 
 ## Components list format
 In order for the program to generate a mixture it must know which components to include in the mixture, this is specified by providing a ";"-separated CSV file. The fields in this CSV file is specified in below table.
