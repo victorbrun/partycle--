@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
 	// TODO: fill the domain using advancing front!!
 	// TODO: Compute contact statistics and output it in some reasonable way
 	// TODO: DONE!
-	std::cout << "[INFO]: no collisions:"  << domain.collision_test() <<  std::endl;
+	//std::cout << "[INFO]: no collisions:"  << domain.collision_test() <<  std::endl;
 	std::cout << "[INFO]: domain volume:"  << domain_vol <<  std::endl;
 	std::cout << "[INFO]: particle volume:"  << total_volume <<  std::endl;
 	std::cout << "[INFO]: no of particles placed:"  << domain.n_particles() <<  std::endl;
