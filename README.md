@@ -9,7 +9,7 @@ To use the program it first needs to be built. To do these follow the below step
 1. Ensure that [Eigen3](https://eigen.tuxfamily.org/index.php?title=Main_Page) is installed where `g++` can find it.
 2. Clone the repo and create a new folder at the project root named `build`.
 3. `cd` into `build/` and run `cmake ..`, this will generate the necessary Make files.
-4. Run `mak all` in `build/`.
+4. Run `make all` in `build/`.
 
 ### Running the program
 Afte the project has been succesfully built there will be an executable in `build/bin/` named `partycle--`. This can be executed using according to below:
